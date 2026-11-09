@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { actions, PERSONAS, useAppState, type Role } from "@/lib/store";
 import { useT } from "@/components/ui";
+import { confetti } from "@/components/fx";
 
 const PHONES: Record<string, string> = {
   karim: "+33 6 12 34 56 78",
@@ -17,6 +18,16 @@ const ROLES: { id: Role; label: string; desc: string; icon: string }[] = [
   { id: "president", label: "Président", desc: "Simulateur et indicateurs", icon: "📊" },
 ];
 
+const TICKER = ["3,17 M d'abonnés, n° 1 en Tunisie", "Pass Voyageur : Le Caire à 750 TND au lieu de 1 870", "2 000 places Fondateur 108", "Supporters virtuels dans 21 pays", "Tirelires Rentrée et Aïd", "Paiement MyTaraji · Zitouna Payment"];
+
+const EMBERS = Array.from({ length: 18 }, (_, i) => ({
+  l: (i * 53) % 100,
+  s: 3 + (i % 4) * 2,
+  c: i % 3 === 0 ? "#B5121B" : "#F2B705",
+  d: 9 + (i % 5) * 3,
+  dl: -((i * 7) % 15),
+}));
+
 export default function LoginPage() {
   const s = useAppState();
   const t = useT();
@@ -28,28 +39,55 @@ export default function LoginPage() {
   const identifier = role === "supporter" ? PHONES[persona] : role === "club" ? "supporters@est.tn" : "president@est.tn";
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col px-5 py-8 text-creme">
-      <div className="flex justify-end">
+    <div className="relative min-h-dvh overflow-hidden bg-[radial-gradient(ellipse_at_top,#4a0d12_0%,#1C1414_55%,#0d0909_100%)] text-creme">
+      <div className="spot start-[-10%]" />
+      <div className="spot end-[-10%]" style={{ animationDelay: "-3.5s" }} />
+      {EMBERS.map((e, i) => (
+        <span key={i} className="ember" style={{ left: `${e.l}%`, width: e.s, height: e.s, background: e.c, animationDuration: `${e.d}s`, animationDelay: `${e.dl}s` }} />
+      ))}
+      {/* Pelouse stylisée */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[repeating-linear-gradient(90deg,rgba(242,183,5,0.05)_0_40px,transparent_40px_80px)] [mask-image:linear-gradient(to_top,black,transparent)]" />
+
+      <div className="relative mx-auto flex min-h-dvh max-w-md flex-col px-5 py-6">
+      <div className="flex items-center justify-between">
+        <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold text-or backdrop-blur">108 ans · 1919 – 2027</span>
         <button onClick={() => actions.setLang(s.lang === "fr" ? "ar" : "fr")} className="min-h-9 rounded-lg px-3 text-xs font-semibold text-or ring-1 ring-or/50">
           {t("language")}
         </button>
       </div>
 
-      <div className="mt-6 flex flex-col items-center text-center">
-        <div className="relative grid h-24 w-24 place-items-center overflow-hidden rounded-full ring-4 ring-or">
-          <div className="absolute inset-0 flex">
-            <div className="flex-1 bg-sang" />
-            <div className="flex-1 bg-or" />
-            <div className="flex-1 bg-sang" />
-            <div className="flex-1 bg-or" />
+      <div className="mt-8 flex flex-col items-center text-center">
+        <div className="relative">
+          <div className="absolute -inset-4 animate-pulse rounded-full bg-or/20 blur-2xl" />
+          <div className="relative grid h-28 w-28 place-items-center overflow-hidden rounded-full shadow-[0_0_60px_rgba(242,183,5,0.35)] ring-4 ring-or">
+            <div className="absolute inset-0 flex">
+              <div className="flex-1 bg-sang" />
+              <div className="flex-1 bg-or" />
+              <div className="flex-1 bg-sang" />
+              <div className="flex-1 bg-or" />
+            </div>
+            <span className="relative text-3xl font-black text-white drop-shadow-lg">EST</span>
           </div>
-          <span className="relative text-2xl font-black text-white drop-shadow">EST</span>
         </div>
-        <h1 className="mt-4 text-2xl font-black">{t("appName")}</h1>
-        <p className="text-sm text-creme/60">{t("club")} · depuis 1919</p>
+        <h1 className="mt-6 text-3xl font-black leading-tight">
+          Aujourd'hui supporters,
+          <br />
+          <span className="text-shine">demain bâtisseurs.</span>
+        </h1>
+        <p className="mt-2 text-sm text-creme/60">{t("appName")} · {t("club")}</p>
       </div>
 
-      <div className="mt-8 rounded-3xl bg-creme p-5 text-sombre shadow-2xl">
+      <div className="mt-6 overflow-hidden whitespace-nowrap text-xs text-creme/70 [mask-image:linear-gradient(90deg,transparent,black_15%,black_85%,transparent)]">
+        <div className="ticker inline-flex gap-8">
+          {[...TICKER, ...TICKER].map((x, i) => (
+            <span key={i}>
+              <span className="text-or">●</span> {x}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-3xl bg-creme/95 p-5 text-sombre shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)] ring-1 ring-white/20 backdrop-blur">
         {step === "id" ? (
           <>
             <h2 className="text-lg font-extrabold">{t("login")}</h2>
@@ -131,7 +169,7 @@ export default function LoginPage() {
             {code.length === 4 && code !== "1919" && <p className="mt-1 text-xs text-sang">Code incorrect.</p>}
             <button
               disabled={code !== "1919"}
-              onClick={() => actions.login(role, persona)}
+              onClick={() => { confetti(70); actions.login(role, persona); }}
               className="mt-4 flex min-h-12 w-full items-center justify-center rounded-xl bg-sang font-semibold text-white disabled:opacity-40"
             >
               {t("confirm")}
@@ -141,6 +179,7 @@ export default function LoginPage() {
       </div>
 
       <p className="mt-auto pt-8 text-center text-[11px] text-creme/40">{t("demo")} · aucun vrai paiement · montants en TND</p>
+      </div>
     </div>
   );
 }

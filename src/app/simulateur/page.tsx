@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { H2, Panel, Screen, useT } from "@/components/ui";
+import { CountUp } from "@/components/fx";
 import { num, tnd } from "@/lib/format";
 
 interface Inputs {
@@ -119,7 +120,9 @@ export default function SimulateurPage() {
         <div className="space-y-4 md:order-2">
           <Panel className="bg-sombre text-creme ring-0">
             <div className="text-xs text-or">{t("annualRevenue")}</div>
-            <div className="text-4xl font-black">{tnd(r.total)}</div>
+            <div className="text-4xl font-black text-or">
+              <CountUp value={r.total} format={(n) => tnd(n)} duration={600} />
+            </div>
             <div className="mt-1 text-xs text-creme/70">
               {num(r.cardsCount)} cartes · {num(r.passSubs)} abonnés au Pass · {num(inputs.virtualPerMatch * inputs.matches)} places virtuelles par an
             </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { actions, useAppState } from "@/lib/store";
 import { askPayment, Badge, Button, H2, MatchSelect, Panel, Screen, toast, useT } from "@/components/ui";
+import { confetti } from "@/components/fx";
 import { num, tnd } from "@/lib/format";
 
 export default function SolidairePage() {
@@ -21,6 +22,7 @@ export default function SolidairePage() {
     ]);
     if (!ok) return;
     actions.giveSolidarity(kind, message);
+    confetti(60);
     setMessage("");
     toast("Merci pour ta place solidaire !");
   }
@@ -31,6 +33,7 @@ export default function SolidairePage() {
     const pseudo = s.persona.name.split(" ")[0] + "_Duo";
     actions.buyVirtual(matchId, pseudo, "Standard", 17);
     actions.giveSolidarity("duo", message);
+    confetti(80);
     toast("Pack Duo acheté, merci !");
   }
 

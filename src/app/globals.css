@@ -38,3 +38,90 @@ input[type="range"] {
   100% { transform: scale(3); opacity: 0; }
 }
 .ping-dot { animation: ping-dot 1.4s ease-out infinite; transform-origin: center; transform-box: fill-box; }
+
+/* ---------- Effets « waouh » ---------- */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.page-in { animation: page-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+.stagger > * { animation: page-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.stagger > *:nth-child(1) { animation-delay: 0.03s; }
+.stagger > *:nth-child(2) { animation-delay: 0.08s; }
+.stagger > *:nth-child(3) { animation-delay: 0.13s; }
+.stagger > *:nth-child(4) { animation-delay: 0.18s; }
+.stagger > *:nth-child(5) { animation-delay: 0.23s; }
+.stagger > *:nth-child(6) { animation-delay: 0.28s; }
+.stagger > *:nth-child(7) { animation-delay: 0.33s; }
+.stagger > *:nth-child(8) { animation-delay: 0.38s; }
+.stagger > *:nth-child(9) { animation-delay: 0.43s; }
+
+/* Projecteurs du stade (écran de connexion) */
+@keyframes sweep {
+  0%, 100% { transform: rotate(-18deg); opacity: 0.55; }
+  50% { transform: rotate(18deg); opacity: 0.9; }
+}
+.spot {
+  position: absolute; top: -10%; width: 60%; height: 120%;
+  background: conic-gradient(from 180deg at 50% 0%, transparent 42%, rgba(242, 183, 5, 0.18) 50%, transparent 58%);
+  transform-origin: 50% 0%;
+  animation: sweep 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes float-up {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  10% { opacity: 0.8; }
+  100% { transform: translateY(-110vh) scale(0.6); opacity: 0; }
+}
+.ember { position: absolute; bottom: -10px; border-radius: 9999px; animation: float-up linear infinite; pointer-events: none; }
+
+@keyframes gradient-pan {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.text-shine {
+  background: linear-gradient(90deg, #f2b705, #fff3c4, #f2b705, #b5121b, #f2b705);
+  background-size: 200% auto;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: gradient-pan 6s linear infinite;
+}
+
+/* Carte 3D holographique */
+.card-3d { perspective: 1200px; }
+.card-inner {
+  position: relative; transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.card-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.card-back { position: absolute; inset: 0; transform: rotateY(180deg); }
+.holo {
+  position: absolute; inset: 0; pointer-events: none; mix-blend-mode: color-dodge; opacity: 0.35;
+  background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.55) 40%, rgba(242, 183, 5, 0.5) 50%, rgba(181, 18, 27, 0.4) 60%, transparent 80%);
+  background-size: 250% 250%;
+  transition: background-position 0.15s;
+}
+@keyframes holo-idle {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+}
+.holo-idle { animation: holo-idle 5s ease-in-out infinite; }
+
+/* Confettis */
+@keyframes confetti-fall {
+  0% { transform: translate3d(0, -10vh, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate3d(var(--dx), 105vh, 0) rotate(var(--rot)); opacity: 0.9; }
+}
+.confetti { position: fixed; top: 0; z-index: 60; width: 9px; height: 14px; border-radius: 2px; pointer-events: none; animation: confetti-fall var(--dur) cubic-bezier(0.25, 0.6, 0.4, 1) forwards; }
+
+/* Tuile « verre » */
+.glass { background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.1); }
+
+@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.ticker { animation: ticker 28s linear infinite; }
+[dir="rtl"] .ticker { animation-direction: reverse; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}

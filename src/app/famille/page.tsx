@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { actions, useAppState, type Piggy, type PiggyType } from "@/lib/store";
 import { askPayment, Badge, Button, H2, Notice, Panel, Progress, Screen, toast, useT } from "@/components/ui";
+import { confetti } from "@/components/fx";
 import { pct, tnd } from "@/lib/format";
 
 const PRESETS: Record<PiggyType, { target: number; deadline: string; monthly: number; icon: string }> = {
@@ -42,6 +43,7 @@ export default function FamillePage() {
       if (!ok) return;
     }
     actions.usePiggy(pg.id, offer.label, offer.price, s.children[0]?.name);
+    confetti();
     toast("Offre groupée réglée !");
   }
 

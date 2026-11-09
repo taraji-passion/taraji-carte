@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { actions, ACCOUNT_CAP, FOUNDER_SEATS, PASS_PLANS, useAppState, type PassPlan } from "@/lib/store";
 import { askPayment, Badge, Button, H2, Notice, Panel, Progress, Screen, toast, useT } from "@/components/ui";
+import { confetti } from "@/components/fx";
 import { pct, tnd } from "@/lib/format";
 
 export default function PassPage() {
@@ -24,6 +25,7 @@ export default function PassPage() {
     ]);
     if (ok) {
       actions.subscribePass(plan, founder);
+      confetti();
       toast(`Bienvenue dans le Pass ${p.label} !`);
     }
   }

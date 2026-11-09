@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { actions, isFlagged, useAppState, VIRTUAL_FORMULAS, type VirtualTicket } from "@/lib/store";
 import { askPayment, Badge, Button, H2, MatchSelect, Notice, Panel, Screen, toast, useT } from "@/components/ui";
+import { confetti } from "@/components/fx";
 import { tnd } from "@/lib/format";
 
 export default function BilletsPage() {
@@ -29,6 +30,7 @@ export default function BilletsPage() {
     if (!ok) return;
     const status = actions.buyVirtual(matchId, pseudo.trim(), formula, price);
     if (status === "valide") {
+      confetti();
       toast("Ton pseudo est sur le mur !");
       router.push("/mur");
     } else if (status === "rejete") {

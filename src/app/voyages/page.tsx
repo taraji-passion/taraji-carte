@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { actions, useAppState, type Trip } from "@/lib/store";
 import { askPayment, Badge, Button, H2, Panel, Progress, Screen, toast, useT } from "@/components/ui";
+import { confetti } from "@/components/fx";
 import { pct, tnd } from "@/lib/format";
 
 type Recap = { trip: Trip; creditUsed: number; complement: number; pointsUsed: number };
@@ -31,6 +32,7 @@ export default function VoyagesPage() {
     const r = actions.bookTrip(trip.id, usePoints);
     if (r) {
       setRecap({ trip, ...r });
+      confetti(120);
       toast("Réservation confirmée !");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }

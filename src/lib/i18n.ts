@@ -70,6 +70,7 @@ const dict = {
   dashboard: { fr: "Tableau de bord", ar: "لوحة القيادة" },
   moderation: { fr: "Modération", ar: "الإشراف" },
   tripsAdmin: { fr: "Gestion des voyages", ar: "إدارة الرحلات" },
+  tech: { fr: "Sous le capot", ar: "البنية التقنية" },
   language: { fr: "العربية", ar: "Français" },
 } as const;
 

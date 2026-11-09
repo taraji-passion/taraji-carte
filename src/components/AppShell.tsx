@@ -27,7 +27,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [showNotifs, setShowNotifs] = useState(false);
   const isLogin = pathname === "/login";
   const unread = s.notifications.filter((n) => !n.read).length;
-  const wide = pathname.startsWith("/admin") || pathname.startsWith("/simulateur");
+  const wide = pathname.startsWith("/admin") || pathname.startsWith("/simulateur") || pathname.startsWith("/tech");
   const role = s.session?.role;
 
   useEffect(() => {
