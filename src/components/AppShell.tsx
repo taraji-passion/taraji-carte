@@ -94,7 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-sombre/[0.06] bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
           <ul className="mx-auto flex max-w-md">
             {tabs.map((tab) => {
-              const active = tab.href === "/" || tab.href === "/admin" ? pathname === tab.href : pathname.startsWith(tab.href);
+              const active = tab.href === "/" || tab.href === "/admin" ? pathname === tab.href : pathname.startsWith(tab.href) || (tab.href === "/matchs" && pathname === "/mur");
               return (
                 <li key={tab.href} className="flex-1">
                   <Link

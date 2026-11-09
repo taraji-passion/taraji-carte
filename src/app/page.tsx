@@ -7,22 +7,26 @@ import { Card, PageHeader, Progress, Section, Sheet, useT } from "@/components/u
 import { SupporterCard } from "@/components/SupporterCard";
 import { Crest } from "@/components/Crest";
 import { CountUp } from "@/components/fx";
+import { GiftSheet, VirtualSeatSheet } from "@/components/TicketSheets";
 import { pct, tnd } from "@/lib/format";
 
 export default function HomePage() {
   const s = useAppState();
   const t = useT();
   const [notifs, setNotifs] = useState(false);
+  const [seat, setSeat] = useState(false);
+  const [gift, setGift] = useState(false);
   const unread = s.notifications.filter((n) => !n.read).length;
   const match = s.matches[0];
   const goal = s.goals.find((g) => s.pass.credit < g.target) ?? s.goals[s.goals.length - 1];
   const firstName = s.persona.name.split(" ")[0];
 
-  const actionsList = [
+  // Raccourcis : chacun ouvre directement sa fonctionnalité
+  const actionsList: { label: string; icon: string; href?: string; onClick?: () => void }[] = [
     { href: "/voyager", label: "Voyager", icon: "✈️" },
-    { href: "/matchs", label: "Place virtuelle", icon: "🎟️" },
+    { onClick: () => setSeat(true), label: "Place virtuelle", icon: "🎟️" },
     { href: "/famille", label: "Tirelire", icon: "💰" },
-    { href: "/matchs", label: "Offrir", icon: "❤️" },
+    { onClick: () => setGift(true), label: "Offrir", icon: "❤️" },
   ];
 
   return (
@@ -51,12 +55,23 @@ export default function HomePage() {
 
       {/* Actions rapides */}
       <div className="mt-5 grid grid-cols-4 gap-2">
-        {actionsList.map((a) => (
-          <Link key={a.label} href={a.href} className="flex flex-col items-center gap-1.5">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-2xl shadow-sm transition active:scale-95">{a.icon}</span>
-            <span className="text-center text-[11px] font-medium text-sombre/70">{a.label}</span>
-          </Link>
-        ))}
+        {actionsList.map((a) => {
+          const inner = (
+            <>
+              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-2xl shadow-sm transition active:scale-95">{a.icon}</span>
+              <span className="text-center text-[11px] font-medium text-sombre/70">{a.label}</span>
+            </>
+          );
+          return a.href ? (
+            <Link key={a.label} href={a.href} className="flex flex-col items-center gap-1.5">
+              {inner}
+            </Link>
+          ) : (
+            <button key={a.label} onClick={a.onClick} className="flex flex-col items-center gap-1.5">
+              {inner}
+            </button>
+          );
+        })}
       </div>
 
       {/* Prochain match */}
@@ -115,6 +130,9 @@ export default function HomePage() {
           </Link>
         )}
       </Section>
+
+      <VirtualSeatSheet open={seat} onClose={() => setSeat(false)} matchId={match.id} />
+      <GiftSheet open={gift} onClose={() => setGift(false)} />
 
       <Sheet open={notifs} onClose={() => setNotifs(false)} title={t("notifications")}>
         <div className="space-y-2">
