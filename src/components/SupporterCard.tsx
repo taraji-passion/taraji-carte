@@ -4,6 +4,7 @@ import { useRef, useState, type PointerEvent } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { useAppState, type Level } from "@/lib/store";
 import { useT } from "./ui";
+import { Logo } from "./Logo";
 
 const LEVEL_STYLE: Record<Level, { bg: string; text: string; accent: string }> = {
   base: { bg: "linear-gradient(135deg, #3d2b2b 0%, #1C1414 55%, #2b1d1d 100%)", text: "text-creme", accent: "#F2B705" },
@@ -63,15 +64,7 @@ export function SupporterCard() {
                   TARAJI <span style={{ color: style.accent }}>{levelName.toUpperCase()}</span>
                 </div>
               </div>
-              <div className="relative grid h-11 w-11 place-items-center overflow-hidden rounded-full ring-2 ring-or">
-                <div className="absolute inset-0 flex">
-                  <div className="flex-1 bg-sang" />
-                  <div className="flex-1 bg-or" />
-                  <div className="flex-1 bg-sang" />
-                  <div className="flex-1 bg-or" />
-                </div>
-                <span className="relative text-[11px] font-black text-white drop-shadow">EST</span>
-              </div>
+              <Logo size={50} className="drop-shadow-lg" />
             </div>
 
             {/* Puce */}

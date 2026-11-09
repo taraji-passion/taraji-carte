@@ -4,6 +4,7 @@ import { useState } from "react";
 import { actions, PERSONAS, useAppState, type Role } from "@/lib/store";
 import { useT } from "@/components/ui";
 import { confetti } from "@/components/fx";
+import { Logo } from "@/components/Logo";
 
 const PHONES: Record<string, string> = {
   karim: "+33 6 12 34 56 78",
@@ -16,8 +17,6 @@ const ROLES: { id: Role; label: string; desc: string; icon: string }[] = [
   { id: "supporter", label: "Supporter", desc: "Carte, Pass, billets, tirelires", icon: "🔴🟡" },
   { id: "admin", label: "Admin", desc: "Back-office, simulateur et indicateurs", icon: "🛠️" },
 ];
-
-const TICKER = ["3,17 M d'abonnés, n° 1 en Tunisie", "Pass Voyageur : Le Caire à 750 TND au lieu de 1 870", "2 000 places Fondateur 108", "Supporters virtuels dans 21 pays", "Tirelires Rentrée et Aïd", "Paiement MyTaraji · Zitouna Payment"];
 
 const EMBERS = Array.from({ length: 18 }, (_, i) => ({
   l: (i * 53) % 100,
@@ -58,15 +57,7 @@ export default function LoginPage() {
       <div className="mt-8 flex flex-col items-center text-center">
         <div className="relative">
           <div className="absolute -inset-4 animate-pulse rounded-full bg-or/20 blur-2xl" />
-          <div className="relative grid h-28 w-28 place-items-center overflow-hidden rounded-full shadow-[0_0_60px_rgba(242,183,5,0.35)] ring-4 ring-or">
-            <div className="absolute inset-0 flex">
-              <div className="flex-1 bg-sang" />
-              <div className="flex-1 bg-or" />
-              <div className="flex-1 bg-sang" />
-              <div className="flex-1 bg-or" />
-            </div>
-            <span className="relative text-3xl font-black text-white drop-shadow-lg">EST</span>
-          </div>
+          <Logo size={130} className="relative drop-shadow-[0_0_30px_rgba(242,183,5,0.35)]" />
         </div>
         <h1 className="mt-6 text-3xl font-black leading-tight">
           Aujourd'hui supporters,
@@ -74,16 +65,6 @@ export default function LoginPage() {
           <span className="text-shine">demain bâtisseurs.</span>
         </h1>
         <p className="mt-2 text-sm text-creme/60">{t("appName")} · {t("club")}</p>
-      </div>
-
-      <div className="mt-6 overflow-hidden whitespace-nowrap text-xs text-creme/70 [mask-image:linear-gradient(90deg,transparent,black_15%,black_85%,transparent)]">
-        <div className="ticker inline-flex gap-8">
-          {[...TICKER, ...TICKER].map((x, i) => (
-            <span key={i}>
-              <span className="text-or">●</span> {x}
-            </span>
-          ))}
-        </div>
       </div>
 
       <div className="mt-6 rounded-3xl bg-creme/95 p-5 text-sombre shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)] ring-1 ring-white/20 backdrop-blur">

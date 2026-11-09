@@ -132,7 +132,6 @@ export interface State {
     movements: Movement[];
   };
   founderSeatsTaken: number;
-  eliminated: boolean;
   goals: { id: string; label: string; target: number }[];
   trips: Trip[];
   bookings: Booking[];
@@ -208,7 +207,7 @@ export function isFlagged(pseudo: string): boolean {
 
 function initialState(): State {
   return {
-    version: 7,
+    version: 8,
     session: null,
     lang: "fr",
     month: 0,
@@ -216,7 +215,6 @@ function initialState(): State {
     card: { level: "or", number: 1187, founder: true, since: "15 janv. 2027" },
     pass: { plan: null, founder: false, credit: 0, movements: [] },
     founderSeatsTaken: 1873,
-    eliminated: false,
     goals: [
       { id: "caire", label: "Le Caire (CAF)", target: 750 },
       { id: "can2027", label: "CAN 2027", target: 1800 },
@@ -479,31 +477,6 @@ export const actions = {
       result = { creditUsed, complement, pointsUsed: pointsValue * 10 };
     });
     return result as { creditUsed: number; complement: number; pointsUsed: number } | null;
-  },
-  setEliminated(on: boolean) {
-    mutate((d) => {
-      d.eliminated = on;
-      const caire = d.trips.find((t) => t.id === "t-caire");
-      if (!caire) return;
-      if (on) {
-        caire.status = "annule";
-        let reported = 0;
-        d.bookings.forEach((b) => {
-          if (b.tripId === "t-caire" && b.status === "confirmee") {
-            b.status = "reportee";
-            if (b.traveler === d.persona.name) reported += b.creditUsed;
-          }
-        });
-        if (reported > 0) {
-          d.pass.credit += reported;
-          d.pass.movements.unshift({ id: uid("m"), date: monthLabel(d.month), label: "Report : voyage au Caire annulé (EST éliminée)", amount: reported, kind: "report" });
-        }
-        notify(d, `L'EST est éliminée : le voyage au Caire est annulé. ${reported > 0 ? `${reported} TND recrédités. ` : ""}Ton crédit reste disponible pour la CAN 2027, la Coupe du monde 2030 ou le Taraji Store.`);
-      } else {
-        caire.status = "publie";
-        notify(d, "Scénario réinitialisé : l'EST est qualifiée, le voyage au Caire est rouvert.");
-      }
-    });
   },
 
   /* --- Billets --- */

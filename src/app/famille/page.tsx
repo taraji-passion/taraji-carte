@@ -1,227 +1,255 @@
 "use client";
 
 import { useState } from "react";
-import { actions, useAppState, type Piggy, type PiggyType } from "@/lib/store";
-import { askPayment, Badge, Button, H2, Notice, Panel, Progress, Screen, toast, useT } from "@/components/ui";
+import { actions, useAppState, type PiggyType } from "@/lib/store";
+import { askPayment, Button, Card, List, PageHeader, Ring, Row, Section, Sheet, toast, useT } from "@/components/ui";
 import { confetti } from "@/components/fx";
 import { pct, tnd } from "@/lib/format";
 
-const PRESETS: Record<PiggyType, { target: number; deadline: string; monthly: number; icon: string }> = {
-  rentree: { target: 700, deadline: "septembre 2027", monthly: 90, icon: "🎒" },
-  aid: { target: 1500, deadline: "mai 2027", monthly: 250, icon: "🐑" },
-  voyage: { target: 1200, deadline: "juillet 2027", monthly: 120, icon: "🧳" },
-};
-
-const OFFERS: Record<PiggyType, { label: string; price: number; detail: string }> = {
-  rentree: { label: "Pack rentrée Taraji (2 enfants)", price: 640, detail: "Cartables, fournitures et tabliers, remise club −15 %" },
-  aid: { label: "Bon mouton chez un éleveur agréé", price: 1400, detail: "Contrôle vétérinaire ; le club ne transporte ni ne stocke les animaux" },
-  voyage: { label: "Week-end famille à Tabarka + match", price: 900, detail: "Hôtel 2 nuits, transport et 4 places au stade" },
+const TYPES: Record<PiggyType, { icon: string; target: number; deadline: string; monthly: number; color: string; offer: string; offerPrice: number }> = {
+  rentree: { icon: "🎒", target: 700, deadline: "sept. 2027", monthly: 90, color: "#2563eb", offer: "Pack rentrée Taraji (2 enfants)", offerPrice: 640 },
+  aid: { icon: "🐑", target: 1500, deadline: "mai 2027", monthly: 250, color: "#059669", offer: "Bon mouton chez un éleveur agréé", offerPrice: 1400 },
+  voyage: { icon: "🧳", target: 1200, deadline: "juil. 2027", monthly: 120, color: "#B5121B", offer: "Week-end famille à Tabarka + match", offerPrice: 900 },
 };
 
 export default function FamillePage() {
   const s = useAppState();
   const t = useT();
-  const [childName, setChildName] = useState("");
-  const [childAge, setChildAge] = useState(8);
-  const [invite, setInvite] = useState<{ piggyId: string; name: string; city: string; amount: number } | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [inviting, setInviting] = useState(false);
+  const [guest, setGuest] = useState({ name: "Mehdi (frère)", city: "Lyon", amount: 100 });
+  const [addingChild, setAddingChild] = useState(false);
+  const [child, setChild] = useState({ name: "", age: 8 });
 
-  const label = (type: PiggyType) => t(type);
-  const active = s.piggies.filter((p) => !p.used).length;
-  const fees = Math.min(3, active);
+  const pg = s.piggies.find((p) => p.id === openId) ?? null;
+  const conf = pg ? TYPES[pg.type] : null;
 
-  async function create(type: PiggyType) {
-    const p = PRESETS[type];
-    actions.createPiggy(type, p.target, p.deadline, p.monthly);
-    toast(`Tirelire ${label(type)} ouverte`);
+  function create(type: PiggyType) {
+    const c = TYPES[type];
+    actions.createPiggy(type, c.target, c.deadline, c.monthly);
+    setCreating(false);
+    toast(`Tirelire ${t(type)} créée`);
   }
 
-  async function use(pg: Piggy) {
-    const offer = OFFERS[pg.type];
-    const complement = Math.max(0, offer.price - pg.balance);
-    if (complement > 0) {
-      const ok = await askPayment(`Complément — ${offer.label}`, complement, [`Prix de l'offre groupée : ${tnd(offer.price)}`, `Solde de la tirelire : ${tnd(pg.balance)}`]);
-      if (!ok) return;
-    }
-    actions.usePiggy(pg.id, offer.label, offer.price, s.children[0]?.name);
+  async function use() {
+    if (!pg || !conf) return;
+    const complement = Math.max(0, conf.offerPrice - pg.balance);
+    if (complement > 0 && !(await askPayment(`Complément · ${conf.offer}`, complement))) return;
+    actions.usePiggy(pg.id, conf.offer, conf.offerPrice, s.children[0]?.name);
     confetti();
-    toast("Offre groupée réglée !");
+    toast("Offre réglée avec ta tirelire !");
   }
 
   return (
-    <Screen title={t("piggy")} icon="🐷" subtitle="Préparer Rentrée, Aïd et Voyage petit à petit">
+    <>
+      <PageHeader
+        title={t("navFamily")}
+        right={
+          s.piggies.length > 0 ? (
+            <button
+              onClick={() => {
+                actions.simulatePiggyMonths(3);
+                toast("+3 mois simulés");
+              }}
+              className="rounded-full bg-or px-4 py-2 text-xs font-bold"
+            >
+              ⏩ +3 mois
+            </button>
+          ) : undefined
+        }
+      />
 
-      {/* Ouvrir */}
-      <Panel>
-        <H2>Ouvrir une tirelire</H2>
-        <div className="grid grid-cols-3 gap-2">
-          {(Object.keys(PRESETS) as PiggyType[]).map((type) => {
+      {s.piggies.length === 0 ? (
+        <div className="rounded-[28px] bg-white p-6 text-center shadow-sm">
+          <div className="text-5xl">💰</div>
+          <h2 className="mt-3 text-xl font-extrabold">La rentrée et l'Aïd, sans stress</h2>
+          <p className="mt-1 text-sm text-sombre/60">Mets un peu de côté chaque mois. Tes proches à l'étranger peuvent participer.</p>
+          <Button className="mt-5 w-full" onClick={() => setCreating(true)}>
+            Créer ma première tirelire
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {s.piggies.map((p) => {
+            const c = TYPES[p.type];
+            const v = pct(p.balance, p.target);
+            return (
+              <Card key={p.id} onClick={() => setOpenId(p.id)} className="flex items-center gap-4">
+                <Ring value={v} color={p.used ? "#10b981" : c.color}>
+                  <span className="text-2xl">{c.icon}</span>
+                </Ring>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-bold">{t(p.type)}</span>
+                  <span className="block text-sm">
+                    <strong>{tnd(p.balance)}</strong> <span className="text-sombre/40">/ {tnd(p.target)}</span>
+                  </span>
+                  <span className="block text-xs text-sombre/50">{p.used ? "Utilisée ✓" : `${tnd(p.monthly)} par mois · ${p.deadline}`}</span>
+                </span>
+                <span className="text-sombre/25 rtl:rotate-180">›</span>
+              </Card>
+            );
+          })}
+          {s.piggies.filter((p) => !p.used).length < 3 && (
+            <button onClick={() => setCreating(true)} className="flex min-h-14 w-full items-center justify-center rounded-3xl border-2 border-dashed border-sombre/15 text-sm font-semibold text-sombre/50">
+              + Nouvelle tirelire
+            </button>
+          )}
+        </div>
+      )}
+
+      <Section title={t("children")}>
+        <div className="flex gap-4">
+          {s.children.map((c) => (
+            <div key={c.id} className="flex flex-col items-center gap-1">
+              <span className="grid h-14 w-14 place-items-center rounded-full bg-white text-xl font-bold text-sang shadow-sm">{c.name[0]}</span>
+              <span className="text-xs font-medium">{c.name}</span>
+              <span className="text-[10px] text-sombre/40">{c.age} ans</span>
+            </div>
+          ))}
+          <button onClick={() => setAddingChild(true)} className="flex flex-col items-center gap-1">
+            <span className="grid h-14 w-14 place-items-center rounded-full border-2 border-dashed border-sombre/20 text-xl text-sombre/40">+</span>
+            <span className="text-xs text-sombre/50">Ajouter</span>
+          </button>
+        </div>
+      </Section>
+
+      {/* Nouvelle tirelire */}
+      <Sheet open={creating} onClose={() => setCreating(false)} title="Nouvelle tirelire">
+        <div className="space-y-2">
+          {(Object.keys(TYPES) as PiggyType[]).map((type) => {
             const exists = s.piggies.some((p) => p.type === type && !p.used);
             return (
-              <button
-                key={type}
-                disabled={exists}
-                onClick={() => create(type)}
-                className="rounded-xl p-3 text-center ring-2 ring-black/10 transition hover:ring-sang disabled:opacity-40"
-              >
-                <div className="text-2xl">{PRESETS[type].icon}</div>
-                <div className="text-sm font-bold">{label(type)}</div>
-                <div className="text-[11px] text-sombre/60">{tnd(PRESETS[type].target)}</div>
-              </button>
+              <Card key={type} onClick={exists ? undefined : () => create(type)} className={`flex items-center gap-4 ${exists ? "opacity-40" : ""}`}>
+                <span className="text-3xl">{TYPES[type].icon}</span>
+                <span className="flex-1">
+                  <span className="block font-bold">{t(type)}</span>
+                  <span className="block text-xs text-sombre/50">
+                    Objectif {tnd(TYPES[type].target)} · {tnd(TYPES[type].monthly)} / mois
+                  </span>
+                </span>
+                {exists && <span className="text-xs">Déjà ouverte</span>}
+              </Card>
             );
           })}
         </div>
-        <p className="mt-2 text-[11px] text-sombre/50">Omra prévue en V2. Frais : 1 TND par mois et par tirelire active, plafonnés à 3 TND (actuellement {fees} TND/mois).</p>
-      </Panel>
+        <p className="mt-3 text-center text-[11px] text-sombre/40">1 TND de frais par mois et par tirelire, 3 TND maximum</p>
+      </Sheet>
 
-      {s.piggies.length > 0 && (
-        <Button
-          variant="gold"
-          className="w-full"
-          onClick={() => {
-            actions.simulatePiggyMonths(3);
-            toast("+3 mois de versements simulés");
-          }}
-        >
-          ⏩ Simuler 3 mois de versements
-        </Button>
-      )}
-
-      {s.piggies.map((pg) => {
-        const v = pct(pg.balance, pg.target);
-        const contributors = s.contributors.filter((c) => c.piggyId === pg.id);
-        const offer = OFFERS[pg.type];
-        return (
-          <Panel key={pg.id} className={pg.used ? "opacity-80" : ""}>
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="text-lg font-bold">
-                  {PRESETS[pg.type].icon} {label(pg.type)}
-                </div>
-                <div className="text-xs text-sombre/60">Objectif {tnd(pg.target)} · échéance {pg.deadline} · {tnd(pg.monthly)} {t("perMonth")}</div>
-              </div>
-              {pg.used ? <Badge tone="vert">Utilisée ✓</Badge> : <Badge>{v} %</Badge>}
-            </div>
-            <div className="mt-3 text-2xl font-black text-sang">{tnd(pg.balance)}</div>
-            <div className="mt-1">
-              <Progress value={v} color={v >= 100 ? "bg-emerald-500" : "bg-or"} label={`Tirelire ${pg.label}`} />
+      {/* Détail d'une tirelire */}
+      <Sheet
+        open={!!pg}
+        onClose={() => {
+          setOpenId(null);
+          setInviting(false);
+        }}
+      >
+        {pg && conf && (
+          <>
+            <div className="flex flex-col items-center text-center">
+              <Ring value={pct(pg.balance, pg.target)} size={110} color={pg.used ? "#10b981" : conf.color}>
+                <span className="text-4xl">{conf.icon}</span>
+              </Ring>
+              <h3 className="mt-3 text-2xl font-extrabold">{t(pg.type)}</h3>
+              <div className="text-3xl font-black">{tnd(pg.balance)}</div>
+              <div className="text-sm text-sombre/50">sur {tnd(pg.target)} · {pg.deadline}</div>
             </div>
 
-            {contributors.length > 0 && (
-              <div className="mt-3 space-y-1">
-                {contributors.map((c) => (
-                  <div key={c.id} className="flex items-center justify-between rounded-lg bg-creme px-3 py-1.5 text-xs">
-                    <span>🌍 {c.name} ({c.city}, {c.country})</span>
-                    <strong>+{tnd(c.total)}</strong>
-                  </div>
-                ))}
+            {!pg.used && !inviting && (
+              <div className="mt-5 grid grid-cols-2 gap-2">
+                <Button
+                  variant="soft"
+                  onClick={async () => {
+                    if (await askPayment(`Versement · ${t(pg.type)}`, 50)) {
+                      actions.depositPiggy(pg.id, 50);
+                      toast("+50 TND");
+                    }
+                  }}
+                >
+                  + 50 TND
+                </Button>
+                <Button variant="soft" onClick={() => setInviting(true)}>
+                  🌍 Inviter un proche
+                </Button>
               </div>
             )}
 
-            {!pg.used && (
-              <>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <Button
-                    variant="ghost"
-                    onClick={async () => {
-                      if (await askPayment(`Versement — tirelire ${pg.label}`, 50)) {
-                        actions.depositPiggy(pg.id, 50);
-                        toast("+50 TND");
-                      }
-                    }}
-                  >
-                    + 50 TND
-                  </Button>
-                  <Button variant="ghost" onClick={() => setInvite({ piggyId: pg.id, name: "Mehdi (frère)", city: "Lyon", amount: 100 })}>
-                    🌍 Inviter
-                  </Button>
+            {inviting && (
+              <div className="mt-5 space-y-2">
+                <p className="text-sm font-semibold">Un proche à l'étranger participe</p>
+                <input className="w-full rounded-2xl bg-white px-4 py-3" value={guest.name} onChange={(e) => setGuest({ ...guest, name: e.target.value })} placeholder="Nom" />
+                <input className="w-full rounded-2xl bg-white px-4 py-3" value={guest.city} onChange={(e) => setGuest({ ...guest, city: e.target.value })} placeholder="Ville" />
+                <div className="flex gap-2">
+                  {[50, 100, 200].map((a) => (
+                    <button key={a} onClick={() => setGuest({ ...guest, amount: a })} className={`min-h-11 flex-1 rounded-2xl text-sm font-semibold ${guest.amount === a ? "bg-sombre text-white" : "bg-white"}`}>
+                      {a} TND
+                    </button>
+                  ))}
                 </div>
-                {invite?.piggyId === pg.id && (
-                  <div className="mt-3 space-y-2 rounded-xl bg-creme p-3">
-                    <div className="text-sm font-semibold">{t("contributor")}</div>
-                    <input className="w-full rounded-lg border border-black/10 px-3 py-2" value={invite.name} onChange={(e) => setInvite({ ...invite, name: e.target.value })} placeholder="Nom" />
-                    <input className="w-full rounded-lg border border-black/10 px-3 py-2" value={invite.city} onChange={(e) => setInvite({ ...invite, city: e.target.value })} placeholder="Ville" />
-                    <label className="flex items-center gap-2 text-sm">
-                      Montant simulé
-                      <input type="number" className="w-24 rounded-lg border border-black/10 px-2 py-1" value={invite.amount} min={10} step={10} onChange={(e) => setInvite({ ...invite, amount: Number(e.target.value) })} />
-                      TND
-                    </label>
-                    <Button
-                      className="w-full"
-                      onClick={() => {
-                        actions.inviteContributor(invite.name, invite.city, invite.city === "Lyon" ? "France" : "Étranger", pg.id, invite.amount);
-                        toast(`${invite.name} a contribué ${invite.amount} TND`);
-                        setInvite(null);
-                      }}
-                    >
-                      Envoyer l'invitation et simuler sa contribution
-                    </Button>
-                    <p className="text-[11px] text-sombre/50">Versement en devise, converti en TND. Sous réserve de l'avis juridique sur la réglementation des changes.</p>
-                  </div>
-                )}
-                <div className="mt-3 rounded-xl ring-1 ring-black/10 p-3">
-                  <div className="text-xs font-semibold text-sombre/60">Offre groupée du club</div>
-                  <div className="font-semibold">{offer.label} — {tnd(offer.price)}</div>
-                  <div className="text-xs text-sombre/60">{offer.detail}</div>
-                  <Button className="mt-2 w-full" disabled={pg.balance <= 0} onClick={() => use(pg)}>
-                    Utiliser la tirelire
-                  </Button>
-                </div>
-                {pg.type === "aid" && (
-                  <div className="mt-2">
-                    <Notice>L'Aïd peut nécessiter un compte de paiement de niveau 2 (plafond niveau 1 : 1 500 TND).</Notice>
-                  </div>
-                )}
-              </>
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    actions.inviteContributor(guest.name, guest.city, guest.city === "Lyon" ? "France" : "Étranger", pg.id, guest.amount);
+                    setInviting(false);
+                    toast(`${guest.name} a participé : +${guest.amount} TND`);
+                  }}
+                >
+                  Envoyer l'invitation
+                </Button>
+              </div>
+            )}
+
+            {!pg.used && !inviting && (
+              <Card className="mt-4">
+                <div className="text-xs text-sombre/50">Offre groupée du club</div>
+                <div className="font-bold">{conf.offer}</div>
+                <div className="text-sm text-sombre/60">{tnd(conf.offerPrice)}</div>
+                <Button className="mt-3 w-full" disabled={pg.balance <= 0} onClick={use}>
+                  Utiliser ma tirelire
+                </Button>
+              </Card>
             )}
 
             {pg.movements.length > 0 && (
-              <details className="mt-3 text-sm">
-                <summary className="cursor-pointer text-xs text-sang">{t("history")} ({pg.movements.length})</summary>
-                <ul className="mt-2 divide-y divide-black/5">
-                  {pg.movements.map((m) => (
-                    <li key={m.id} className="flex justify-between gap-2 py-1.5 text-xs">
-                      <span>
-                        {m.label} <span className="text-sombre/40">· {m.date}</span>
-                      </span>
-                      <strong className={m.amount >= 0 ? "text-emerald-700" : "text-sang"}>
-                        {m.amount >= 0 ? "+" : ""}
-                        {tnd(m.amount)}
-                      </strong>
-                    </li>
+              <div className="mt-4">
+                <List>
+                  {pg.movements.slice(0, 6).map((m) => (
+                    <Row
+                      key={m.id}
+                      title={m.label}
+                      sub={m.date}
+                      right={
+                        <span className={`shrink-0 font-semibold ${m.amount >= 0 ? "text-emerald-700" : "text-sang"}`}>
+                          {m.amount >= 0 ? "+" : ""}
+                          {tnd(m.amount)}
+                        </span>
+                      }
+                    />
                   ))}
-                </ul>
-              </details>
+                </List>
+              </div>
             )}
-          </Panel>
-        );
-      })}
+          </>
+        )}
+      </Sheet>
 
-      {/* Enfants */}
-      <Panel>
-        <H2>{t("children")}</H2>
-        <ul className="space-y-2">
-          {s.children.map((c) => (
-            <li key={c.id} className="flex items-center justify-between rounded-xl bg-creme px-3 py-2 text-sm">
-              <span>👧 {c.name}, {c.age} ans</span>
-              <button className="text-xs text-sombre/50" onClick={() => actions.removeChild(c.id)} aria-label={`Retirer ${c.name}`}>Retirer</button>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-3 flex gap-2">
-          <input className="min-w-0 flex-1 rounded-xl border border-black/10 bg-creme px-3 py-2" placeholder="Prénom" value={childName} onChange={(e) => setChildName(e.target.value)} />
-          <input type="number" className="w-16 rounded-xl border border-black/10 bg-creme px-2 py-2" min={0} max={17} value={childAge} onChange={(e) => setChildAge(Number(e.target.value))} aria-label="Âge" />
-          <Button
-            disabled={!childName.trim()}
-            onClick={() => {
-              actions.addChild(childName.trim(), childAge);
-              setChildName("");
-            }}
-          >
-            Ajouter
-          </Button>
-        </div>
-        <p className="mt-2 text-[11px] text-sombre/50">Les enfants n'ont pas de compte propre : profils rattachés à ton compte, données minimales (prénom, âge).</p>
-      </Panel>
-    </Screen>
+      {/* Ajouter un enfant */}
+      <Sheet open={addingChild} onClose={() => setAddingChild(false)} title="Ajouter un enfant">
+        <input className="w-full rounded-2xl bg-white px-4 py-3" placeholder="Prénom" value={child.name} onChange={(e) => setChild({ ...child, name: e.target.value })} />
+        <input type="number" min={0} max={17} className="mt-2 w-full rounded-2xl bg-white px-4 py-3" value={child.age} onChange={(e) => setChild({ ...child, age: Number(e.target.value) })} aria-label="Âge" />
+        <p className="mt-2 text-xs text-sombre/50">Pas de compte pour les enfants : seulement le prénom et l'âge.</p>
+        <Button
+          className="mt-4 w-full"
+          disabled={!child.name.trim()}
+          onClick={() => {
+            actions.addChild(child.name.trim(), child.age);
+            setChild({ name: "", age: 8 });
+            setAddingChild(false);
+          }}
+        >
+          Ajouter
+        </Button>
+      </Sheet>
+    </>
   );
 }

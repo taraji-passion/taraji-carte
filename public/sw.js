@@ -1,7 +1,7 @@
 // Service worker minimal : la carte et le QR code restent consultables hors ligne.
-const CACHE = "taraji-v2";
+const CACHE = "taraji-v3";
 const BASE = new URL(self.registration.scope).pathname.replace(/\/$/, "");
-const PAGES = ["/", "/login/", "/carte/", "/pass/", "/voyages/", "/billets/", "/mur/", "/solidaire/", "/famille/", "/points/", "/profil/", "/simulateur/", "/admin/", "/admin/voyages/", "/admin/moderation/"].map((p) => BASE + p);
+const PAGES = ["/", "/login/", "/voyager/", "/matchs/", "/famille/", "/profil/", "/admin/", "/admin/voyages/", "/admin/moderation/", "/admin/simulateur/"].map((p) => BASE + p);
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(PAGES)).catch(() => {}));

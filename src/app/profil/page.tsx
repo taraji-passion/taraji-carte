@@ -1,85 +1,120 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { actions, useAppState } from "@/lib/store";
-import { H2, Panel, Screen, toast, useT } from "@/components/ui";
+import { actions, CHAPTERS, LEVELS, useAppState, type Level } from "@/lib/store";
+import { askPayment, List, PageHeader, Row, Section, Sheet, toast, useT } from "@/components/ui";
+import { confetti } from "@/components/fx";
+import { tnd } from "@/lib/format";
 
 export default function ProfilPage() {
   const s = useAppState();
   const t = useT();
   const router = useRouter();
-  const role = s.session?.role;
+  const [sheet, setSheet] = useState<"level" | "chapter" | "points" | null>(null);
+  const isAdmin = s.session?.role === "admin";
+  const levelName = (l: Level) => t(l === "base" ? "levelBase" : l === "or" ? "levelOr" : "levelPlatine");
+
+  async function changeLevel(l: Level) {
+    if (l === s.card.level) return;
+    const ok = await askPayment(`Carte ${levelName(l)}`, LEVELS[l].price, ["Valable 1 an", "Sans droit de vote"]);
+    if (!ok) return;
+    actions.setLevel(l);
+    setSheet(null);
+    confetti(60);
+    toast(`Bienvenue au niveau ${levelName(l)} !`);
+  }
 
   return (
-    <Screen title={t("myProfile")} icon="👤" subtitle={s.session?.name}>
-      <Panel>
-        <H2>Compte</H2>
-        <ul className="space-y-1 text-sm">
-          <li>
-            <span className="text-sombre/60">Nom : </span>
-            <strong>{s.session?.name}</strong>
-          </li>
-          <li>
-            <span className="text-sombre/60">Espace : </span>
-            {role === "supporter" ? "Supporter" : "Admin (club)"}
-          </li>
-          {role === "supporter" && (
-            <>
-              <li>
-                <span className="text-sombre/60">Ville : </span>
-                {s.persona.city}, {s.persona.country}
-                {s.persona.diaspora ? " (diaspora)" : ""}
-              </li>
-              <li>
-                <span className="text-sombre/60">Chapitre : </span>
-                {s.persona.chapter}
-              </li>
-            </>
-          )}
-        </ul>
-        <button onClick={() => actions.setLang(s.lang === "fr" ? "ar" : "fr")} className="mt-3 min-h-11 w-full rounded-xl text-sm font-semibold text-sombre ring-1 ring-black/15">
-          🌐 {t("language")}
-        </button>
-      </Panel>
+    <>
+      <PageHeader title={isAdmin ? t("account") : t("myProfile")} />
 
-      <Panel>
-        <H2>Installer l'application</H2>
-        <ul className="space-y-1 text-sm text-sombre/80">
-          <li>📱 iPhone : Safari → Partager → « Sur l'écran d'accueil »</li>
-          <li>🤖 Android : Chrome → menu ⋮ → « Installer l'application »</li>
-        </ul>
-      </Panel>
+      <div className="flex items-center gap-4">
+        <span className="grid h-16 w-16 place-items-center rounded-full bg-sang text-2xl font-black text-white">{(s.session?.name ?? "?")[0]}</span>
+        <div>
+          <div className="text-xl font-extrabold">{s.session?.name}</div>
+          <div className="text-sm text-sombre/50">{isAdmin ? "admin@est.tn" : `${s.persona.city}, ${s.persona.country}`}</div>
+        </div>
+      </div>
 
-      <Panel>
-        <H2>À propos de cette démo</H2>
-        <ul className="space-y-1 text-xs text-sombre/70">
-          <li>• Données fictives, enregistrées uniquement dans ce navigateur.</li>
-          <li>• Aucun vrai paiement : MyTaraji / Zitouna Payment en V1.</li>
-          <li>• Tous les montants sont en dinars tunisiens (TND).</li>
-          <li>• La Carte Supporter ne remplace pas la carte d'adhérent statutaire et ne donne aucun droit de vote.</li>
-        </ul>
-        <button
-          className="mt-3 min-h-11 w-full rounded-xl text-sm font-semibold text-sombre/70 ring-1 ring-black/15"
-          onClick={() => {
-            if (confirm("Remettre la démo à zéro ? (tu seras déconnecté)")) {
-              actions.reset();
-              toast("Démo réinitialisée");
-            }
-          }}
-        >
-          ↺ {t("reset")}
-        </button>
-      </Panel>
+      {!isAdmin && (
+        <Section title="Ma carte">
+          <List>
+            <Row icon="💳" title="Niveau" sub={`${levelName(s.card.level)} · ${tnd(LEVELS[s.card.level].price)} par an`} onClick={() => setSheet("level")} />
+            <Row icon="📍" title={t("chapter")} sub={s.persona.chapter} onClick={() => setSheet("chapter")} />
+            <Row icon="🏗️" title={t("points")} sub={`${s.points.balance} points`} onClick={() => setSheet("points")} />
+          </List>
+        </Section>
+      )}
 
-      <button
-        onClick={() => {
-          actions.logout();
-          router.replace("/login");
-        }}
-        className="min-h-12 w-full rounded-xl bg-sang text-sm font-semibold text-white"
-      >
-        {t("logout")}
-      </button>
-    </Screen>
+      <Section title="Réglages">
+        <List>
+          <Row icon="🌐" title="Langue" sub={s.lang === "fr" ? "Français" : "العربية"} right={<span className="text-sm font-semibold text-sang">{t("language")}</span>} onClick={() => actions.setLang(s.lang === "fr" ? "ar" : "fr")} />
+          <Row
+            icon="↺"
+            title={t("reset")}
+            onClick={() => {
+              if (confirm("Remettre la démo à zéro ?")) actions.reset();
+            }}
+          />
+          <Row
+            icon="🚪"
+            title={<span className="text-sang">{t("logout")}</span>}
+            onClick={() => {
+              actions.logout();
+              router.replace("/login");
+            }}
+          />
+        </List>
+      </Section>
+
+      <p className="mt-6 text-center text-[11px] leading-relaxed text-sombre/40">
+        Démo · données fictives · aucun vrai paiement
+        <br />
+        La Carte Supporter ne donne pas de droit de vote.
+      </p>
+
+      <Sheet open={sheet === "level"} onClose={() => setSheet(null)} title="Choisir mon niveau">
+        <div className="space-y-2">
+          {(Object.keys(LEVELS) as Level[]).map((l) => (
+            <button key={l} onClick={() => changeLevel(l)} className={`flex w-full items-center gap-3 rounded-3xl bg-white p-4 text-start ring-2 ${s.card.level === l ? "ring-sang" : "ring-transparent"}`}>
+              <span className="flex-1">
+                <span className="block font-bold">{levelName(l)}</span>
+                <span className="block text-xs text-sombre/50">{LEVELS[l].perks.slice(-2).join(" · ")}</span>
+              </span>
+              <span className="font-black">{tnd(LEVELS[l].price)}</span>
+            </button>
+          ))}
+        </div>
+      </Sheet>
+
+      <Sheet open={sheet === "chapter"} onClose={() => setSheet(null)} title={t("chapter")}>
+        <List>
+          {[...new Set([s.persona.chapter, ...CHAPTERS])].map((c) => (
+            <Row
+              key={c}
+              title={c}
+              right={c === s.persona.chapter ? <span className="font-bold text-sang">✓</span> : undefined}
+              onClick={() => {
+                actions.setChapter(c);
+                setSheet(null);
+              }}
+            />
+          ))}
+        </List>
+      </Sheet>
+
+      <Sheet open={sheet === "points"} onClose={() => setSheet(null)} title={t("points")}>
+        <div className="mb-4 text-center">
+          <div className="text-5xl font-black">{s.points.balance}</div>
+          <div className="text-sm text-sombre/50">10 points = 1 TND sur un voyage</div>
+        </div>
+        <List>
+          {s.points.movements.map((m) => (
+            <Row key={m.id} title={m.label} sub={m.date} right={<span className={`font-semibold ${m.amount >= 0 ? "text-emerald-700" : "text-sang"}`}>{m.amount >= 0 ? `+${m.amount}` : m.amount}</span>} />
+          ))}
+        </List>
+      </Sheet>
+    </>
   );
 }
