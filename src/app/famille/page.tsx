@@ -17,8 +17,11 @@ export default function FamillePage() {
   const t = useT();
   const [creating, setCreating] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
-  const [inviting, setInviting] = useState(false);
-  const [guest, setGuest] = useState({ name: "Mehdi (frère)", city: "Lyon", amount: 100 });
+  const [mode, setMode] = useState<"deposit" | "invite" | null>(null);
+  const [amount, setAmount] = useState("");
+  const [guest, setGuest] = useState({ name: "Mehdi (frère)", city: "Lyon" });
+  const value = Math.round(Number(amount.replace(",", ".")) || 0);
+  const validAmount = value >= 1 && value <= 5000;
   const [addingChild, setAddingChild] = useState(false);
   const [child, setChild] = useState({ name: "", age: 8 });
 
@@ -141,15 +144,9 @@ export default function FamillePage() {
         open={!!pg}
         onClose={() => {
           setOpenId(null);
-          setInviting(false);
+          setMode(null);
         }}
-        onBack={
-          inviting
-            ? () => setInviting(false)
-            : () => {
-                setOpenId(null);
-              }
-        }
+        onBack={mode ? () => setMode(null) : () => setOpenId(null)}
       >
         {pg && conf && (
           <>
@@ -162,51 +159,61 @@ export default function FamillePage() {
               <div className="text-sm text-sombre/50">sur {tnd(pg.target)} · {pg.deadline}</div>
             </div>
 
-            {!pg.used && !inviting && (
+            {!pg.used && !mode && (
               <div className="mt-5 grid grid-cols-2 gap-2">
                 <Button
                   variant="soft"
-                  onClick={async () => {
-                    if (await askPayment(`Versement · ${t(pg.type)}`, 50)) {
-                      actions.depositPiggy(pg.id, 50);
-                      toast("+50 TND");
-                    }
+                  onClick={() => {
+                    setAmount("");
+                    setMode("deposit");
                   }}
                 >
-                  + 50 TND
+                  + Verser
                 </Button>
-                <Button variant="soft" onClick={() => setInviting(true)}>
+                <Button
+                  variant="soft"
+                  onClick={() => {
+                    setAmount("100");
+                    setMode("invite");
+                  }}
+                >
                   🌍 Inviter un proche
                 </Button>
               </div>
             )}
 
-            {inviting && (
-              <div className="mt-5 space-y-2">
-                <p className="text-sm font-semibold">Un proche à l'étranger participe</p>
-                <input className="w-full rounded-2xl bg-white px-4 py-3" value={guest.name} onChange={(e) => setGuest({ ...guest, name: e.target.value })} placeholder="Nom" />
-                <input className="w-full rounded-2xl bg-white px-4 py-3" value={guest.city} onChange={(e) => setGuest({ ...guest, city: e.target.value })} placeholder="Ville" />
-                <div className="flex gap-2">
-                  {[50, 100, 200].map((a) => (
-                    <button key={a} onClick={() => setGuest({ ...guest, amount: a })} className={`min-h-11 flex-1 rounded-2xl text-sm font-semibold ${guest.amount === a ? "bg-sombre text-white" : "bg-white"}`}>
-                      {a} TND
-                    </button>
-                  ))}
-                </div>
+            {mode && (
+              <div className="mt-5 space-y-3">
+                <p className="text-sm font-semibold">{mode === "deposit" ? "Combien veux-tu verser ?" : "Un proche à l'étranger participe"}</p>
+                {mode === "invite" && (
+                  <>
+                    <input className="w-full rounded-2xl bg-white px-4 py-3" value={guest.name} onChange={(e) => setGuest({ ...guest, name: e.target.value })} placeholder="Nom" />
+                    <input className="w-full rounded-2xl bg-white px-4 py-3" value={guest.city} onChange={(e) => setGuest({ ...guest, city: e.target.value })} placeholder="Ville" />
+                  </>
+                )}
+                <AmountInput value={amount} onChange={setAmount} />
+                {amount !== "" && !validAmount && <p className="text-xs text-sang">Saisis un montant entre 1 et 5 000 TND.</p>}
                 <Button
                   className="w-full"
-                  onClick={() => {
-                    actions.inviteContributor(guest.name, guest.city, guest.city === "Lyon" ? "France" : "Étranger", pg.id, guest.amount);
-                    setInviting(false);
-                    toast(`${guest.name} a participé : +${guest.amount} TND`);
+                  disabled={!validAmount}
+                  onClick={async () => {
+                    if (mode === "deposit") {
+                      if (!(await askPayment(`Versement · ${t(pg.type)}`, value))) return;
+                      actions.depositPiggy(pg.id, value);
+                      toast(`+${value} TND dans ta tirelire`);
+                    } else {
+                      actions.inviteContributor(guest.name, guest.city, guest.city === "Lyon" ? "France" : "Étranger", pg.id, value);
+                      toast(`${guest.name} a participé : +${value} TND`);
+                    }
+                    setMode(null);
                   }}
                 >
-                  Envoyer l'invitation
+                  {mode === "deposit" ? `Verser ${validAmount ? tnd(value) : ""}` : "Envoyer l'invitation"}
                 </Button>
               </div>
             )}
 
-            {!pg.used && !inviting && (
+            {!pg.used && !mode && (
               <Card className="mt-4">
                 <div className="text-xs text-sombre/50">Offre groupée du club</div>
                 <div className="font-bold">{conf.offer}</div>
@@ -258,5 +265,32 @@ export default function FamillePage() {
         </Button>
       </Sheet>
     </>
+  );
+}
+
+/** Saisie libre d'un montant en TND, avec raccourcis. */
+function AmountInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <div className="flex items-baseline gap-2 rounded-2xl bg-white px-4 py-3 ring-2 ring-transparent focus-within:ring-sang">
+        <input
+          inputMode="decimal"
+          autoFocus
+          aria-label="Montant en TND"
+          placeholder="0"
+          value={value}
+          onChange={(e) => onChange(e.target.value.replace(/[^0-9.,]/g, ""))}
+          className="min-w-0 flex-1 bg-transparent text-3xl font-black outline-none"
+        />
+        <span className="text-lg font-bold text-sombre/40">TND</span>
+      </div>
+      <div className="mt-2 flex gap-2">
+        {[20, 50, 100, 200].map((a) => (
+          <button key={a} onClick={() => onChange(String(a))} className={`min-h-10 flex-1 rounded-xl text-sm font-semibold ${value === String(a) ? "bg-sombre text-white" : "bg-white"}`}>
+            {a}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
