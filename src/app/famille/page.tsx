@@ -143,6 +143,13 @@ export default function FamillePage() {
           setOpenId(null);
           setInviting(false);
         }}
+        onBack={
+          inviting
+            ? () => setInviting(false)
+            : () => {
+                setOpenId(null);
+              }
+        }
       >
         {pg && conf && (
           <>

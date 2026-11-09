@@ -179,7 +179,8 @@ export function List({ children }: { children: ReactNode }) {
 /* Panneau qui glisse du bas (bottom sheet)                            */
 /* ------------------------------------------------------------------ */
 
-export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title?: string; children: ReactNode }) {
+/** onBack (facultatif) : action du bouton Retour, par défaut il ferme le panneau. */
+export function Sheet({ open, onClose, onBack, title, children }: { open: boolean; onClose: () => void; onBack?: () => void; title?: string; children: ReactNode }) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -196,8 +197,14 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={title}>
       <button className="sheet-backdrop absolute inset-0 bg-black/40" onClick={onClose} aria-label="Fermer" />
-      <div className="sheet-up relative max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-t-[28px] bg-creme px-5 pb-[calc(env(safe-area-inset-bottom)+20px)] pt-2 shadow-2xl">
-        <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-sombre/15" />
+      <div className="sheet-up relative max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-t-[28px] bg-creme px-5 pb-[calc(env(safe-area-inset-bottom)+20px)] shadow-2xl">
+        {/* En-tête fixe : le bouton Retour reste visible même quand le contenu défile */}
+        <div className="sticky top-0 z-10 -mx-5 mb-2 bg-creme/95 px-5 pb-1 pt-2 backdrop-blur">
+          <div className="mx-auto mb-1 h-1.5 w-10 rounded-full bg-sombre/15" />
+          <button onClick={onBack ?? onClose} className="-ms-1 inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-sang">
+            <span className="text-lg leading-none rtl:rotate-180">‹</span> Retour
+          </button>
+        </div>
         {title && <h3 className="mb-4 text-xl font-extrabold">{title}</h3>}
         {children}
       </div>

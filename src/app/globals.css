@@ -133,3 +133,7 @@ input[type="range"] {
 .sheet-backdrop { animation: fade-in 0.25s ease both; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
+
+/* Entrée de page en fondu uniquement : une transformation ici casserait le
+   positionnement « fixed » des panneaux et de la modale de paiement. */
+.page-fade { animation: fade-in 0.3s ease; } /* sans « fill » : pas de contexte d'empilement après l'animation */
