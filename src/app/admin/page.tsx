@@ -18,7 +18,7 @@ export default function DashboardPage() {
   const monthly = [1200, 2900, 3400, 2100, 1800, 1650, 2300, 1900, 2600, 1500, 1200, 1900];
 
   return (
-    <StaffOnly allowPresident>
+    <StaffOnly>
       <Screen title={t("dashboard")} icon="📈" subtitle="Indicateurs de la communauté (fictifs)">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <Stat label="Cartes actives" value={num(cardsTotal)} sub="objectif an 1 : 20 000" />

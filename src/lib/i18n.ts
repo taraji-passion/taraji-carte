@@ -43,7 +43,7 @@ const dict = {
   voyage: { fr: "Voyage", ar: "سفر" },
   children: { fr: "Profils enfants", ar: "ملفّات الأطفال" },
   contributor: { fr: "Contributeur diaspora", ar: "مساهم من الجالية" },
-  simulator: { fr: "Simulateur président", ar: "محاكي الرئيس" },
+  simulator: { fr: "Simulateur de revenus", ar: "محاكي المداخيل" },
   admin: { fr: "Back-office club", ar: "إدارة النادي" },
   notifications: { fr: "Notifications", ar: "الإشعارات" },
   pay: { fr: "Payer", ar: "ادفع" },
@@ -70,7 +70,6 @@ const dict = {
   dashboard: { fr: "Tableau de bord", ar: "لوحة القيادة" },
   moderation: { fr: "Modération", ar: "الإشراف" },
   tripsAdmin: { fr: "Gestion des voyages", ar: "إدارة الرحلات" },
-  tech: { fr: "Sous le capot", ar: "البنية التقنية" },
   language: { fr: "العربية", ar: "Français" },
 } as const;
 

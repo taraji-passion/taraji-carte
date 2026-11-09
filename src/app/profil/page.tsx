@@ -21,7 +21,7 @@ export default function ProfilPage() {
           </li>
           <li>
             <span className="text-sombre/60">Espace : </span>
-            {role === "supporter" ? "Supporter" : role === "club" ? "Club (back-office)" : "Président"}
+            {role === "supporter" ? "Supporter" : "Admin (club)"}
           </li>
           {role === "supporter" && (
             <>

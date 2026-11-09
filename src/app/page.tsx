@@ -33,8 +33,6 @@ export default function HomePage() {
   const role = s.session?.role ?? "supporter";
   const pending = s.tickets.filter((x) => x.status === "en_attente").length;
   const activePiggies = s.piggies.filter((p) => !p.used);
-  const tech: Tile = { href: "/tech", key: "tech", icon: "⚙️", info: "Architecture, API, conformité", grad: G.nuit };
-
   const supporter: Tile[] = [
     { href: "/pass", key: "passTitle", icon: "💰", info: s.pass.plan ? `Crédit ${tnd(s.pass.credit)}` : `${s.founderSeatsTaken} / 2 000 Fondateurs`, grad: G.or, big: true },
     { href: "/voyages", key: "catalog", icon: "✈️", info: `${s.trips.filter((x) => x.status === "publie").length} voyages ouverts`, grad: G.bleu },
@@ -44,20 +42,14 @@ export default function HomePage() {
     { href: "/famille", key: "piggy", icon: "🐷", info: activePiggies.length ? `${activePiggies.length} active(s)` : "Rentrée, Aïd, Voyage", grad: G.vert },
     { href: "/points", key: "points", icon: "🏗️", info: `${s.points.balance} points`, grad: G.violet },
   ];
-  const club: Tile[] = [
+  const admin: Tile[] = [
     { href: "/admin", key: "dashboard", icon: "📈", info: "Cartes, Pass, voyages, billets", grad: G.sang, big: true },
+    { href: "/simulateur", key: "simulator", icon: "📊", info: "Revenus annuels en TND", grad: G.or },
     { href: "/admin/voyages", key: "tripsAdmin", icon: "✈️", info: `${s.trips.length} voyages · CSV`, grad: G.bleu },
     { href: "/admin/moderation", key: "moderation", icon: "🛡️", info: pending ? `${pending} en attente` : "File vide", grad: G.rose },
-    { href: "/mur", key: "wall", icon: "📣", info: "Vue publique", grad: G.or },
-    tech,
+    { href: "/mur", key: "wall", icon: "📣", info: "Vue publique", grad: G.vert },
   ];
-  const president: Tile[] = [
-    { href: "/simulateur", key: "simulator", icon: "📊", info: "Revenus annuels estimés en TND", grad: G.or, big: true },
-    { href: "/admin", key: "dashboard", icon: "📈", info: "Indicateurs", grad: G.sang },
-    { href: "/mur", key: "wall", icon: "📣", info: "En direct", grad: G.rose },
-    tech,
-  ];
-  const tiles = role === "club" ? club : role === "president" ? president : supporter;
+  const tiles = role === "admin" ? admin : supporter;
 
   return (
     <div className="space-y-5">
@@ -67,7 +59,7 @@ export default function HomePage() {
         <div className="relative">
           <div className="text-sm text-or">{t("hello")} 👋</div>
           <div className="text-2xl font-black">{s.session?.name}</div>
-          <div className="text-xs text-creme/60">{role === "supporter" ? `${s.persona.city} · ${s.persona.chapter}` : role === "club" ? "Espace du club" : "Espace du président"}</div>
+          <div className="text-xs text-creme/60">{role === "supporter" ? `${s.persona.city} · ${s.persona.chapter}` : "Espace Admin du club"}</div>
         </div>
 
         {role === "supporter" ? (

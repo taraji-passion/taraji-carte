@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { H2, Panel, Screen, useT } from "@/components/ui";
+import { H2, Panel, Screen, StaffOnly, useT } from "@/components/ui";
 import { CountUp } from "@/components/fx";
 import { num, tnd } from "@/lib/format";
 
@@ -96,6 +96,7 @@ export default function SimulateurPage() {
   };
 
   return (
+    <StaffOnly>
     <Screen title={t("simulator")} icon="📊" subtitle="Revenus annuels estimés en TND">
       <div className="sticky top-[60px] z-30 -mx-4 bg-or px-4 py-2 text-center text-xs font-bold text-sombre shadow">
         ⚠️ {t("hypotheses")} — estimations indicatives, données fictives
@@ -211,5 +212,6 @@ export default function SimulateurPage() {
         </ul>
       </Panel>
     </Screen>
+    </StaffOnly>
   );
 }

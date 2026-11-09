@@ -238,16 +238,16 @@ export function MatchSelect({ value, onChange }: { value: string; onChange: (id:
   );
 }
 
-/** Réserve un écran aux comptes du club (et au président pour le tableau de bord). */
-export function StaffOnly({ children, allowPresident = false }: { children: ReactNode; allowPresident?: boolean }) {
+/** Réserve un écran à l'espace Admin du club. */
+export function StaffOnly({ children }: { children: ReactNode }) {
   const s = useAppState();
   const role = s.session?.role;
-  if (role === "club" || (allowPresident && role === "president")) return <>{children}</>;
+  if (role === "admin") return <>{children}</>;
   return (
     <div className="py-16 text-center">
       <div className="text-4xl">🔒</div>
-      <p className="mt-2 font-semibold">Écran réservé au club</p>
-      <p className="text-sm text-sombre/60">Déconnecte-toi puis connecte-toi avec l'espace « Club ».</p>
+      <p className="mt-2 font-semibold">Écran réservé à l'administration</p>
+      <p className="text-sm text-sombre/60">Déconnecte-toi puis connecte-toi avec l'espace « Admin ».</p>
       <Link href="/" className="mt-4 inline-block text-sm font-semibold text-sang">← Accueil</Link>
     </div>
   );

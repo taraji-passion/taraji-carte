@@ -111,7 +111,7 @@ export interface Notification {
   read: boolean;
 }
 
-export type Role = "supporter" | "club" | "president";
+export type Role = "supporter" | "admin";
 
 export interface Session {
   role: Role;
@@ -208,7 +208,7 @@ export function isFlagged(pseudo: string): boolean {
 
 function initialState(): State {
   return {
-    version: 6,
+    version: 7,
     session: null,
     lang: "fr",
     month: 0,
@@ -378,7 +378,7 @@ export const actions = {
         d.persona = { ...p };
         d.session = { role, name: p.name };
       } else {
-        d.session = { role, name: role === "club" ? "Responsable supporters" : "Le Président" };
+        d.session = { role, name: "Administration du club" };
       }
     });
   },

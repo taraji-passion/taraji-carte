@@ -14,8 +14,7 @@ const PHONES: Record<string, string> = {
 
 const ROLES: { id: Role; label: string; desc: string; icon: string }[] = [
   { id: "supporter", label: "Supporter", desc: "Carte, Pass, billets, tirelires", icon: "🔴🟡" },
-  { id: "club", label: "Club", desc: "Back-office des supporters", icon: "🛠️" },
-  { id: "president", label: "Président", desc: "Simulateur et indicateurs", icon: "📊" },
+  { id: "admin", label: "Admin", desc: "Back-office, simulateur et indicateurs", icon: "🛠️" },
 ];
 
 const TICKER = ["3,17 M d'abonnés, n° 1 en Tunisie", "Pass Voyageur : Le Caire à 750 TND au lieu de 1 870", "2 000 places Fondateur 108", "Supporters virtuels dans 21 pays", "Tirelires Rentrée et Aïd", "Paiement MyTaraji · Zitouna Payment"];
@@ -36,7 +35,7 @@ export default function LoginPage() {
   const [step, setStep] = useState<"id" | "code">("id");
   const [code, setCode] = useState("");
 
-  const identifier = role === "supporter" ? PHONES[persona] : role === "club" ? "supporters@est.tn" : "president@est.tn";
+  const identifier = role === "supporter" ? PHONES[persona] : "admin@est.tn";
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-[radial-gradient(ellipse_at_top,#4a0d12_0%,#1C1414_55%,#0d0909_100%)] text-creme">
@@ -91,7 +90,7 @@ export default function LoginPage() {
         {step === "id" ? (
           <>
             <h2 className="text-lg font-extrabold">{t("login")}</h2>
-            <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-2">
               {ROLES.map((r) => (
                 <button
                   key={r.id}
