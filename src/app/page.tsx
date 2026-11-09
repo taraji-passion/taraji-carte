@@ -1,69 +1,151 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+import { QRCodeSVG } from "qrcode.react";
+import { actions, CHAPTERS, LEVELS, useAppState, type Level } from "@/lib/store";
+import { askPayment, Badge, H2, Notice, Panel, toast, useT } from "@/components/ui";
+import { tnd } from "@/lib/format";
+
+const LEVEL_STYLE: Record<Level, string> = {
+  base: "from-[#3a2a2a] via-sombre to-[#2b1d1d]",
+  or: "from-sang via-[#8e0e15] to-[#5c0a0f]",
+  platine: "from-[#e4dfd3] via-[#b9b2a3] to-[#8a8376]",
+};
+
+export default function CartePage() {
+  const s = useAppState();
+  const t = useT();
+  const levelName = (l: Level) => t(l === "base" ? "levelBase" : l === "or" ? "levelOr" : "levelPlatine");
+  const qrValue = `TARAJI-ID:${s.card.number}:${s.card.level.toUpperCase()}:${s.persona.name}`;
+  const dark = s.card.level !== "platine";
+
+  async function changeLevel(l: Level) {
+    if (l === s.card.level) return;
+    const ok = await askPayment(`Carte Supporter ${levelName(l)}`, LEVELS[l].price, [
+      "Abonnement annuel, rappel 30 jours avant le renouvellement",
+      "La carte ne donne aucun droit statutaire (pas de droit de vote)",
+      s.persona.diaspora ? "Paiement en devise accepté (diaspora)" : "Paiement depuis ton portefeuille MyTaraji",
+    ]);
+    if (ok) {
+      actions.setLevel(l);
+      toast(`Carte mise à jour : niveau ${levelName(l)}`);
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="space-y-4">
+      <h1 className="text-xl font-extrabold">{t("myCard")}</h1>
+
+      <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br p-5 shadow-xl ${LEVEL_STYLE[s.card.level]} ${dark ? "text-creme" : "text-sombre"}`}>
+        <div className="pointer-events-none absolute -end-10 -top-10 h-40 w-40 rounded-full bg-or/25 blur-2xl" />
+        <div className="pointer-events-none absolute inset-y-0 end-0 flex w-24 opacity-15">
+          <div className="flex-1 bg-or" />
+          <div className="flex-1 bg-sang" />
+          <div className="flex-1 bg-or" />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="relative flex items-start justify-between">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.2em] opacity-80">{t("club")}</div>
+            <div className="mt-1 text-2xl font-black tracking-tight">TARAJI {levelName(s.card.level).toUpperCase()}</div>
+          </div>
+          <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-b from-sang from-50% to-or to-50% text-xs font-black text-white ring-2 ring-or">
+            EST
+          </span>
         </div>
-      </main>
+        <div className="relative mt-4 flex items-end justify-between gap-3">
+          <div className="space-y-1">
+            <div className="text-lg font-bold">{s.persona.name}</div>
+            <div className="text-sm opacity-90">
+              {t("member")} {String(s.card.number).padStart(4, "0")}
+            </div>
+            {s.card.founder && (
+              <div className="inline-block rounded-full bg-or px-2 py-0.5 text-[11px] font-bold text-sombre">{t("founderEdition")}</div>
+            )}
+            <div className="text-xs opacity-85">
+              {t("chapter")} : {s.persona.chapter}
+            </div>
+            <div className="text-xs opacity-75">
+              Depuis le {s.card.since}
+              {s.pass.founder ? " · Fondateur 108 ✈️" : ""}
+            </div>
+          </div>
+          <div className="shrink-0 rounded-xl bg-white p-2 shadow">
+            <QRCodeSVG value={qrValue} size={92} fgColor="#1C1414" level="M" />
+          </div>
+        </div>
+        <div className="relative mt-4 border-t border-current/20 pt-2 text-[11px] opacity-85">{t("noVote")}</div>
+      </div>
+      <p className="text-center text-xs text-sombre/50">QR code consultable hors ligne une fois l'application installée.</p>
+
+      <Panel>
+        <H2>{t("level")}</H2>
+        <div className="grid grid-cols-3 gap-2">
+          {(Object.keys(LEVELS) as Level[]).map((l) => (
+            <button
+              key={l}
+              onClick={() => changeLevel(l)}
+              className={`rounded-xl p-3 text-start ring-2 transition ${s.card.level === l ? "bg-sang/5 ring-sang" : "ring-black/10"}`}
+            >
+              <div className="text-sm font-bold">{levelName(l)}</div>
+              <div className="text-xs text-sombre/70">{tnd(LEVELS[l].price)}</div>
+              <div className="text-[10px] text-sombre/50">{t("perYear")}</div>
+            </button>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-sombre/50">Prix indicatifs à tester : Base 35 à 70 TND, Or environ 200 TND, Platine environ 680 TND.</p>
+      </Panel>
+
+      <Panel>
+        <H2>{t("benefits")}</H2>
+        <ul className="space-y-2 text-sm">
+          {LEVELS[s.card.level].perks.map((p) => (
+            <li key={p} className="flex gap-2">
+              <span className="text-or">★</span>
+              {p}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-3">
+          <Notice>
+            Les remises famille et le service voyage existants restent dans <strong>MyTaraji</strong> (renvoi vers l'application en V1).
+          </Notice>
+        </div>
+      </Panel>
+
+      <Panel>
+        <H2>{t("chapter")}</H2>
+        <select
+          className="w-full rounded-xl border border-black/10 bg-creme px-3 py-2"
+          value={s.persona.chapter}
+          onChange={(e) => {
+            actions.setChapter(e.target.value);
+            toast(`Chapitre : ${e.target.value}`);
+          }}
+        >
+          {[...new Set([s.persona.chapter, ...CHAPTERS])].map((c) => (
+            <option key={c}>{c}</option>
+          ))}
+        </select>
+        <p className="mt-2 text-xs text-sombre/50">Ta ville ou ta cellule de supporters, en Tunisie ou dans la diaspora (Tunisiens résidant à l'étranger).</p>
+      </Panel>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Link href="/points" className="rounded-2xl bg-sombre p-4 text-creme">
+          <div className="text-xs text-or">{t("points")}</div>
+          <div className="text-2xl font-black">{s.points.balance}</div>
+          <div className="text-xs opacity-70">points →</div>
+        </Link>
+        <Link href="/pass" className="rounded-2xl bg-or p-4 text-sombre">
+          <div className="text-xs font-semibold">{t("travelCredit")}</div>
+          <div className="text-2xl font-black">{tnd(s.pass.credit)}</div>
+          <div className="text-xs">{s.pass.plan ? <Badge tone="sang">Pass actif</Badge> : "Découvrir le Pass →"}</div>
+        </Link>
+      </div>
+      {!s.pass.plan && (
+        <Link href="/pass" className="flex min-h-12 items-center justify-center rounded-xl bg-sang px-4 text-sm font-semibold text-white">
+          ✈️ {t("passTitle")} — {s.founderSeatsTaken} / 2 000 Fondateurs
+        </Link>
+      )}
     </div>
   );
 }
