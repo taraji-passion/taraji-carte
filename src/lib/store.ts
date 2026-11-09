@@ -208,7 +208,7 @@ export function isFlagged(pseudo: string): boolean {
 
 function initialState(): State {
   return {
-    version: 5,
+    version: 6,
     session: null,
     lang: "fr",
     month: 0,
@@ -250,7 +250,7 @@ function initialState(): State {
       { id: "m1", opponent: "Al Ahly", competition: "Ligue des champions CAF — quart retour", date: "Sam. 20 mars 2027, 20h", stadium: "Stade Hammadi-Agrebi, Radès" },
       { id: "m2", opponent: "CS Sfaxien", competition: "Ligue 1", date: "Sam. 6 févr. 2027, 17h", stadium: "Stade Hammadi-Agrebi, Radès" },
       { id: "m3", opponent: "Mamelodi Sundowns", competition: "Ligue des champions CAF", date: "Ven. 19 févr. 2027, 20h", stadium: "Stade Hammadi-Agrebi, Radès" },
-      { id: "m4", opponent: "Paris Saint-Germain", competition: "Match amical international", date: "Sam. 24 juil. 2027, 21h", stadium: "Stade Hammadi-Agrebi, Radès" },
+      { id: "m4", opponent: "Paris Saint-Germain", competition: "Coupe du monde des clubs 2029", date: "Été 2029 (date à confirmer)", stadium: "Stade à confirmer" },
     ],
     tickets: [
       { id: "vt1", matchId: "m1", pseudo: "Arbitre_vendu", city: "Tunis", country: "Tunisie", formula: "Standard", price: 17, status: "en_attente", mine: false, autoFlag: true },
