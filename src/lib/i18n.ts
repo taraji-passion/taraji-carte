@@ -58,6 +58,18 @@ const dict = {
   ambitious: { fr: "Ambitieux", ar: "طموح" },
   reset: { fr: "Réinitialiser la démo", ar: "إعادة ضبط العرض" },
   profile: { fr: "Profil de démo", ar: "ملفّ العرض" },
+  login: { fr: "Connexion", ar: "تسجيل الدخول" },
+  loginMyTaraji: { fr: "Se connecter avec MyTaraji", ar: "الدخول عبر MyTaraji" },
+  home: { fr: "Accueil", ar: "الرئيسية" },
+  back: { fr: "Retour", ar: "رجوع" },
+  logout: { fr: "Se déconnecter", ar: "تسجيل الخروج" },
+  hello: { fr: "Bonjour", ar: "مرحباً" },
+  myProfile: { fr: "Mon profil", ar: "ملفّي" },
+  wall: { fr: "Mur en direct", ar: "الجدار المباشر" },
+  piggyShort: { fr: "Tirelires", ar: "الحصّالات" },
+  dashboard: { fr: "Tableau de bord", ar: "لوحة القيادة" },
+  moderation: { fr: "Modération", ar: "الإشراف" },
+  tripsAdmin: { fr: "Gestion des voyages", ar: "إدارة الرحلات" },
   language: { fr: "العربية", ar: "Français" },
 } as const;
 

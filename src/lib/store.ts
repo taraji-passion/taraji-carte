@@ -111,8 +111,16 @@ export interface Notification {
   read: boolean;
 }
 
+export type Role = "supporter" | "club" | "president";
+
+export interface Session {
+  role: Role;
+  name: string;
+}
+
 export interface State {
   version: number;
+  session: Session | null;
   lang: Lang;
   month: number; // mois simulé (0 = janvier 2027)
   persona: Persona;
@@ -200,7 +208,8 @@ export function isFlagged(pseudo: string): boolean {
 
 function initialState(): State {
   return {
-    version: 3,
+    version: 4,
+    session: null,
     lang: "fr",
     month: 0,
     persona: PERSONAS[0],
@@ -360,6 +369,20 @@ export const actions = {
   },
   setLang(lang: Lang) {
     mutate((d) => { d.lang = lang; });
+  },
+  login(role: Role, personaId?: string) {
+    mutate((d) => {
+      if (role === "supporter") {
+        const p = PERSONAS.find((x) => x.id === personaId) ?? PERSONAS[0];
+        d.persona = { ...p };
+        d.session = { role, name: p.name };
+      } else {
+        d.session = { role, name: role === "club" ? "Responsable supporters" : "Le Président" };
+      }
+    });
+  },
+  logout() {
+    mutate((d) => { d.session = null; });
   },
   setPersona(id: string) {
     const p = PERSONAS.find((x) => x.id === id);

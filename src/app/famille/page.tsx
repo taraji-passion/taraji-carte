@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { actions, useAppState, type Piggy, type PiggyType } from "@/lib/store";
-import { askPayment, Badge, Button, H2, Notice, Panel, Progress, toast, useT } from "@/components/ui";
+import { askPayment, Badge, Button, H2, Notice, Panel, Progress, Screen, toast, useT } from "@/components/ui";
 import { pct, tnd } from "@/lib/format";
 
 const PRESETS: Record<PiggyType, { target: number; deadline: string; monthly: number; icon: string }> = {
@@ -46,9 +46,7 @@ export default function FamillePage() {
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-extrabold">{t("piggy")}</h1>
-      <p className="text-sm text-sombre/70">Prépare les grosses dépenses de la famille petit à petit, avec les offres groupées du club.</p>
+    <Screen title={t("piggy")} icon="🐷" subtitle="Préparer Rentrée, Aïd et Voyage petit à petit">
 
       {/* Ouvrir */}
       <Panel>
@@ -222,6 +220,6 @@ export default function FamillePage() {
         </div>
         <p className="mt-2 text-[11px] text-sombre/50">Les enfants n'ont pas de compte propre : profils rattachés à ton compte, données minimales (prénom, âge).</p>
       </Panel>
-    </div>
+    </Screen>
   );
 }

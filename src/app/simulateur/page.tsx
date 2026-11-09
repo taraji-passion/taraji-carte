@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { H2, Panel, useT } from "@/components/ui";
+import { H2, Panel, Screen, useT } from "@/components/ui";
 import { num, tnd } from "@/lib/format";
 
 interface Inputs {
@@ -95,11 +95,10 @@ export default function SimulateurPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <Screen title={t("simulator")} icon="📊" subtitle="Revenus annuels estimés en TND">
       <div className="sticky top-[60px] z-30 -mx-4 bg-or px-4 py-2 text-center text-xs font-bold text-sombre shadow">
         ⚠️ {t("hypotheses")} — estimations indicatives, données fictives
       </div>
-      <h1 className="text-xl font-extrabold">{t("simulator")}</h1>
 
       <div className="grid grid-cols-3 gap-2">
         {(Object.keys(SCENARIOS) as Scenario[]).map((k) => (
@@ -208,6 +207,6 @@ export default function SimulateurPage() {
           <li>• Cibles du PRD : 20 000 cartes en année 1, 60 000 à maturité ; 5 000 abonnés au Pass en 2027</li>
         </ul>
       </Panel>
-    </div>
+    </Screen>
   );
 }

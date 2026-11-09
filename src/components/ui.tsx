@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSyncExternalStore, type ReactNode } from "react";
 import { useAppState } from "@/lib/store";
 import { translate, type Key } from "@/lib/i18n";
@@ -8,6 +9,28 @@ import { tnd } from "@/lib/format";
 export function useT() {
   const { lang } = useAppState();
   return (key: Key) => translate(lang, key);
+}
+
+/** En-tête d'une « fenêtre » : une fonctionnalité par écran, avec retour à l'accueil. */
+export function Screen({ title, icon, subtitle, children, back = "/" }: { title: string; icon: string; subtitle?: string; children: ReactNode; back?: string }) {
+  const t = useT();
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <Link href={back} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-lg shadow-sm ring-1 ring-black/5" aria-label={t("back")}>
+          <span className="rtl:rotate-180">←</span>
+        </Link>
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-extrabold">
+            <span className="me-1">{icon}</span>
+            {title}
+          </h1>
+          {subtitle && <p className="truncate text-xs text-sombre/60">{subtitle}</p>}
+        </div>
+      </div>
+      {children}
+    </div>
+  );
 }
 
 export function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
@@ -195,6 +218,37 @@ export function Toast() {
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center px-4" role="status">
       <div className="max-w-md rounded-xl bg-sombre px-4 py-3 text-sm text-creme shadow-lg">{msg}</div>
+    </div>
+  );
+}
+
+export function MatchSelect({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  const s = useAppState();
+  return (
+    <div>
+      <label className="mb-1 block text-xs font-semibold text-sombre/60">Match à domicile</label>
+      <select className="w-full rounded-xl border border-black/10 bg-white px-3 py-2" value={value} onChange={(e) => onChange(e.target.value)}>
+        {s.matches.map((m) => (
+          <option key={m.id} value={m.id}>
+            EST – {m.opponent} · {m.date}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+/** Réserve un écran aux comptes du club (et au président pour le tableau de bord). */
+export function StaffOnly({ children, allowPresident = false }: { children: ReactNode; allowPresident?: boolean }) {
+  const s = useAppState();
+  const role = s.session?.role;
+  if (role === "club" || (allowPresident && role === "president")) return <>{children}</>;
+  return (
+    <div className="py-16 text-center">
+      <div className="text-4xl">🔒</div>
+      <p className="mt-2 font-semibold">Écran réservé au club</p>
+      <p className="text-sm text-sombre/60">Déconnecte-toi puis connecte-toi avec l'espace « Club ».</p>
+      <Link href="/" className="mt-4 inline-block text-sm font-semibold text-sang">← Accueil</Link>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppState } from "@/lib/store";
-import { H2, Panel, useT } from "@/components/ui";
+import { H2, Panel, Screen, useT } from "@/components/ui";
 
 const EARN = [
   ["Adhésion à la Carte", "100 pts"],
@@ -16,8 +16,7 @@ export default function PointsPage() {
   const s = useAppState();
   const t = useT();
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-extrabold">{t("points")}</h1>
+    <Screen title={t("points")} icon="🏗️" subtitle="Solde et historique">
       <Panel className="bg-sombre text-creme ring-0">
         <div className="text-xs text-or">Solde</div>
         <div className="text-5xl font-black">{s.points.balance}</div>
@@ -52,6 +51,6 @@ export default function PointsPage() {
           ))}
         </ul>
       </Panel>
-    </div>
+    </Screen>
   );
 }
