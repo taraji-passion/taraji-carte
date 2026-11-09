@@ -420,6 +420,15 @@ export const actions = {
         : `Bienvenue dans le Pass ${p.label} !`);
     });
   },
+  /** Versement ponctuel sur le crédit voyage (depuis le portefeuille MyTaraji). */
+  topUpCredit(amount: number) {
+    mutate((d) => {
+      if (!d.pass.plan || amount <= 0) return;
+      d.pass.credit += amount;
+      d.pass.movements.unshift({ id: uid("m"), date: monthLabel(d.month), label: "Versement ponctuel depuis MyTaraji", amount, kind: "versement" });
+      notify(d, `${amount} TND ajoutés à ton crédit voyage. Nouveau solde : ${d.pass.credit} TND.`);
+    });
+  },
   cancelPass() {
     mutate((d) => {
       const refund = d.pass.credit;

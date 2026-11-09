@@ -4,6 +4,7 @@ import { useState } from "react";
 import { actions, ACCOUNT_CAP, FOUNDER_SEATS, PASS_PLANS, useAppState, type PassPlan, type Trip } from "@/lib/store";
 import { askPayment, Badge, Button, Card, List, PageHeader, Progress, Row, Section, Segmented, Sheet, toast, useT } from "@/components/ui";
 import { confetti, CountUp } from "@/components/fx";
+import { TopUpSheet } from "@/components/TopUpSheet";
 import { pct, tnd } from "@/lib/format";
 
 function flag(trip: Trip) {
@@ -25,6 +26,7 @@ export default function VoyagerPage() {
   const [usePoints, setUsePoints] = useState(false);
   const [booked, setBooked] = useState<{ creditUsed: number; complement: number } | null>(null);
   const [history, setHistory] = useState(false);
+  const [topUp, setTopUp] = useState(false);
 
   const seatsLeft = FOUNDER_SEATS - s.founderSeatsTaken;
   const trip = s.trips.find((x) => x.id === tripId) ?? null;
@@ -133,11 +135,14 @@ export default function VoyagerPage() {
           <CountUp value={s.pass.credit} format={(n) => tnd(n)} />
         </div>
         <div className="mt-1 text-sm text-emerald-400">
-          +{PASS_PLANS[s.pass.plan].credit} TND chaque mois · {PASS_PLANS[s.pass.plan].label}
+          🔁 +{PASS_PLANS[s.pass.plan].credit} TND ajoutés automatiquement chaque mois
         </div>
         {s.pass.credit > ACCOUNT_CAP && <div className="mt-2 text-xs text-or">Plafond de {tnd(ACCOUNT_CAP)} dépassé : réserve un voyage ou passe au niveau 2.</div>}
-        <div className="mt-5 flex gap-2">
-          <button onClick={() => setHistory(true)} className="min-h-11 flex-1 rounded-2xl bg-white/10 text-sm font-semibold">
+        <button onClick={() => setTopUp(true)} className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-or text-[15px] font-bold text-sombre">
+          + Ajouter de l'argent
+        </button>
+        <div className="mt-2 flex gap-2">
+          <button onClick={() => setHistory(true)} className="min-h-10 flex-1 rounded-2xl bg-white/10 text-sm font-semibold">
             Historique
           </button>
           <button
@@ -145,7 +150,7 @@ export default function VoyagerPage() {
               actions.simulateMonths(6);
               toast("+6 mois simulés");
             }}
-            className="min-h-11 flex-1 rounded-2xl bg-or text-sm font-semibold text-sombre"
+            className="min-h-10 flex-1 rounded-2xl bg-white/10 text-sm font-semibold"
           >
             ⏩ {t("simulate6")}
           </button>
@@ -224,6 +229,8 @@ export default function VoyagerPage() {
           </div>
         )}
       </Sheet>
+
+      <TopUpSheet open={topUp} onClose={() => setTopUp(false)} />
 
       {/* Historique */}
       <Sheet open={history} onClose={() => setHistory(false)} title={t("history")}>

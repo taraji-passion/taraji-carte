@@ -312,3 +312,30 @@ export function Toast() {
     </div>
   );
 }
+
+/** Saisie libre d'un montant en TND, avec raccourcis. */
+export function AmountInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <div className="flex items-baseline gap-2 rounded-2xl bg-white px-4 py-3 ring-2 ring-transparent focus-within:ring-sang">
+        <input
+          inputMode="decimal"
+          autoFocus
+          aria-label="Montant en TND"
+          placeholder="0"
+          value={value}
+          onChange={(e) => onChange(e.target.value.replace(/[^0-9.,]/g, ""))}
+          className="min-w-0 flex-1 bg-transparent text-3xl font-black outline-none"
+        />
+        <span className="text-lg font-bold text-sombre/40">TND</span>
+      </div>
+      <div className="mt-2 flex gap-2">
+        {[20, 50, 100, 200].map((a) => (
+          <button key={a} onClick={() => onChange(String(a))} className={`min-h-10 flex-1 rounded-xl text-sm font-semibold ${value === String(a) ? "bg-sombre text-white" : "bg-white"}`}>
+            {a}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}

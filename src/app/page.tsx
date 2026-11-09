@@ -8,6 +8,7 @@ import { SupporterCard } from "@/components/SupporterCard";
 import { Crest } from "@/components/Crest";
 import { CountUp } from "@/components/fx";
 import { GiftSheet, VirtualSeatSheet } from "@/components/TicketSheets";
+import { TopUpSheet } from "@/components/TopUpSheet";
 import { pct, tnd } from "@/lib/format";
 
 export default function HomePage() {
@@ -16,6 +17,7 @@ export default function HomePage() {
   const [notifs, setNotifs] = useState(false);
   const [seat, setSeat] = useState(false);
   const [gift, setGift] = useState(false);
+  const [topUp, setTopUp] = useState(false);
   const unread = s.notifications.filter((n) => !n.read).length;
   const match = s.matches[0];
   const goal = s.goals.find((g) => s.pass.credit < g.target) ?? s.goals[s.goals.length - 1];
@@ -108,7 +110,7 @@ export default function HomePage() {
                     <CountUp value={s.pass.credit} format={(n) => tnd(n)} />
                   </div>
                 </div>
-                <span className="text-xs font-semibold text-emerald-700">+{PASS_PLANS[s.pass.plan].credit} TND / mois</span>
+                <span className="text-xs font-semibold text-emerald-700">🔁 +{PASS_PLANS[s.pass.plan].credit} TND / mois</span>
               </div>
               <div className="mt-3 flex justify-between text-xs text-sombre/60">
                 <span>{goal.label}</span>
@@ -118,6 +120,9 @@ export default function HomePage() {
                 <Progress value={pct(s.pass.credit, goal.target)} label={goal.label} />
               </div>
             </Link>
+            <button onClick={() => setTopUp(true)} className="mt-4 flex min-h-11 w-full items-center justify-center rounded-2xl bg-or text-sm font-bold">
+              + Ajouter de l'argent
+            </button>
           </Card>
         ) : (
           <Link href="/voyager" className="flex items-center gap-4 rounded-3xl bg-or p-5 shadow-[0_10px_30px_-12px_rgba(242,183,5,0.9)]">
@@ -133,6 +138,7 @@ export default function HomePage() {
 
       <VirtualSeatSheet open={seat} onClose={() => setSeat(false)} matchId={match.id} />
       <GiftSheet open={gift} onClose={() => setGift(false)} />
+      <TopUpSheet open={topUp} onClose={() => setTopUp(false)} />
 
       <Sheet open={notifs} onClose={() => setNotifs(false)} title={t("notifications")}>
         <div className="space-y-2">
