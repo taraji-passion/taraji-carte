@@ -9,6 +9,7 @@ import { Crest } from "@/components/Crest";
 import { CountUp } from "@/components/fx";
 import { GiftSheet, VirtualSeatSheet } from "@/components/TicketSheets";
 import { TopUpSheet } from "@/components/TopUpSheet";
+import { InstallApp } from "@/components/InstallApp";
 import { pct, tnd } from "@/lib/format";
 
 export default function HomePage() {
@@ -74,6 +75,10 @@ export default function HomePage() {
             </button>
           );
         })}
+      </div>
+
+      <div className="mt-5">
+        <InstallApp />
       </div>
 
       {/* Prochain match */}

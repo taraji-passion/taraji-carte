@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { actions, CHAPTERS, LEVELS, useAppState, type Level } from "@/lib/store";
 import { askPayment, List, PageHeader, Row, Section, Sheet, toast, useT } from "@/components/ui";
 import { confetti } from "@/components/fx";
+import { InstallApp } from "@/components/InstallApp";
 import { tnd } from "@/lib/format";
 
 export default function ProfilPage() {
@@ -46,6 +47,10 @@ export default function ProfilPage() {
           </List>
         </Section>
       )}
+
+      <Section>
+        <InstallApp />
+      </Section>
 
       <Section title="Réglages">
         <List>

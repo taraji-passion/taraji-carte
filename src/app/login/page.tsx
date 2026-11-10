@@ -5,6 +5,7 @@ import { actions, PERSONAS, useAppState, type Role } from "@/lib/store";
 import { useT } from "@/components/ui";
 import { confetti } from "@/components/fx";
 import { Logo } from "@/components/Logo";
+import { InstallApp } from "@/components/InstallApp";
 
 const PHONES: Record<string, string> = {
   karim: "+33 6 12 34 56 78",
@@ -156,6 +157,10 @@ export default function LoginPage() {
             </button>
           </>
         )}
+      </div>
+
+      <div className="mt-5">
+        <InstallApp variant="dark" />
       </div>
 
       <p className="mt-auto pt-8 text-center text-[11px] text-creme/40">{t("demo")} · aucun vrai paiement · montants en TND</p>
