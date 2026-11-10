@@ -25,6 +25,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      # Si le lockfile a été généré derrière un miroir npm privé, on repasse sur le registre public
+      - name: Utiliser le registre npm public
+        run: sed -i -E 's#https://[^"]+/repository/registry\.npmjs\.org/#https://registry.npmjs.org/#g' package-lock.json
       - run: npm ci
       - run: npm run build
         env:
