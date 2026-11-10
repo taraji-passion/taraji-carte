@@ -6,6 +6,7 @@ import { useEffect, type ReactNode } from "react";
 import { useAppState, useHydrated } from "@/lib/store";
 import { BASE_PATH } from "@/lib/format";
 import { PaymentModal, Toast, useT } from "./ui";
+import { hasChosenBrowser, useDevice } from "./InstallApp";
 import type { Key } from "@/lib/i18n";
 
 const ICONS: Record<string, ReactNode> = {
@@ -51,6 +52,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = clean(usePathname());
   const isLogin = pathname === "/login";
+  const isPublic = pathname === "/installer"; // écran de choix « installer / continuer » : accessible sans connexion
+  const device = useDevice();
   const role = s.session?.role;
   const isAdminPath = pathname.startsWith("/admin");
   const wrongSpace = (role === "admin" && !isAdminPath && pathname !== "/profil") || (role === "supporter" && isAdminPath);
@@ -62,17 +65,28 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   // Connexion obligatoire, et chaque espace reste dans ses propres onglets
   useEffect(() => {
-    if (!hydrated) return;
-    if (!s.session && !isLogin) router.replace("/login");
+    if (!hydrated || isPublic) return;
+    // Premier accès dans le navigateur : écran de choix « Installer l'app » ou « Continuer dans le navigateur »
+    if (!s.session && !device.standalone && !hasChosenBrowser()) router.replace("/installer");
+    else if (!s.session && !isLogin) router.replace("/login");
     else if (s.session && isLogin) router.replace(role === "admin" ? "/admin" : "/");
     else if (wrongSpace) router.replace(role === "admin" ? "/admin" : "/");
-  }, [hydrated, s.session, role, isLogin, wrongSpace, router]);
+  }, [hydrated, s.session, role, isLogin, isPublic, wrongSpace, router, device.standalone]);
 
   useEffect(() => {
     if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
       navigator.serviceWorker.register(`${BASE_PATH}/sw.js`, { scope: `${BASE_PATH}/` }).catch(() => {});
     }
   }, []);
+
+  if (isPublic) {
+    return (
+      <div className="min-h-dvh bg-creme">
+        {hydrated ? children : null}
+        <Toast />
+      </div>
+    );
+  }
 
   if (isLogin) {
     return (

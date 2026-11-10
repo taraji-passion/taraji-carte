@@ -5,7 +5,7 @@ import { actions, PERSONAS, useAppState, type Role } from "@/lib/store";
 import { useT } from "@/components/ui";
 import { confetti } from "@/components/fx";
 import { Logo } from "@/components/Logo";
-import { InstallApp } from "@/components/InstallApp";
+import { InstallBanner } from "@/components/InstallApp";
 
 const PHONES: Record<string, string> = {
   karim: "+33 6 12 34 56 78",
@@ -48,6 +48,9 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[repeating-linear-gradient(90deg,rgba(242,183,5,0.05)_0_40px,transparent_40px_80px)] [mask-image:linear-gradient(to_top,black,transparent)]" />
 
       <div className="relative mx-auto flex min-h-dvh max-w-md flex-col px-5 py-6">
+      <div className="mb-5">
+        <InstallBanner />
+      </div>
       <div className="flex items-center justify-between">
         <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold text-or backdrop-blur">108 ans · 1919 – 2027</span>
         <button onClick={() => actions.setLang(s.lang === "fr" ? "ar" : "fr")} className="min-h-9 rounded-lg px-3 text-xs font-semibold text-or ring-1 ring-or/50">
@@ -157,10 +160,6 @@ export default function LoginPage() {
             </button>
           </>
         )}
-      </div>
-
-      <div className="mt-5">
-        <InstallApp variant="dark" />
       </div>
 
       <p className="mt-auto pt-8 text-center text-[11px] text-creme/40">{t("demo")} · aucun vrai paiement · montants en TND</p>

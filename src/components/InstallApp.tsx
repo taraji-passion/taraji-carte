@@ -1,44 +1,73 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
-import { Button, Sheet } from "./ui";
+import Link from "next/link";
+import { useSyncExternalStore } from "react";
 import { Logo } from "./Logo";
 
-/* L'événement « beforeinstallprompt » (Chrome, Edge, Android) est capté une seule fois, au chargement. */
+/* ------------------------------------------------------------------ */
+/* Détection de l'appareil et de l'installation possible               */
+/* ------------------------------------------------------------------ */
+
 interface InstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
+
+// « beforeinstallprompt » (Chrome, Edge, Android) : capté une seule fois, au chargement
 let deferred: InstallPromptEvent | null = null;
 const listeners = new Set<() => void>();
+const emit = () => listeners.forEach((l) => l());
 if (typeof window !== "undefined") {
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferred = e as InstallPromptEvent;
-    listeners.forEach((l) => l());
+    emit();
   });
   window.addEventListener("appinstalled", () => {
     deferred = null;
-    listeners.forEach((l) => l());
+    emit();
   });
 }
 
-// Environnement du navigateur, calculé une fois (instantané stable pour useSyncExternalStore)
-const SERVER_ENV = { standalone: false, ios: false, ready: false };
-let clientEnv: typeof SERVER_ENV | null = null;
-function readEnv() {
-  if (!clientEnv) {
-    const nav = navigator as Navigator & { standalone?: boolean };
-    clientEnv = {
-      standalone: window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true,
-      ios: /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1),
-      ready: true,
-    };
-  }
-  return clientEnv;
+export interface Device {
+  ready: boolean;
+  standalone: boolean; // déjà ouverte comme app installée
+  ios: boolean;
+  android: boolean;
+  inApp: boolean; // navigateur intégré (WhatsApp, Facebook, Instagram, Gmail…) : installation impossible
+  iosBrowser: "safari" | "chrome" | "autre";
+  desktop: boolean;
 }
 
-function useInstallState() {
+const SERVER_DEVICE: Device = { ready: false, standalone: false, ios: false, android: false, inApp: false, iosBrowser: "safari", desktop: false };
+let clientDevice: Device | null = null;
+
+function readDevice(): Device {
+  if (!clientDevice) {
+    const ua = navigator.userAgent;
+    const nav = navigator as Navigator & { standalone?: boolean };
+    const ios = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const android = /android/i.test(ua);
+    const inApp = /FBAN|FBAV|Instagram|Line\/|LinkedInApp|Snapchat|Twitter|GSA\/|WhatsApp|Messenger|MicroMessenger|; wv\)/i.test(ua);
+    clientDevice = {
+      ready: true,
+      standalone: window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true,
+      ios,
+      android,
+      inApp,
+      iosBrowser: /CriOS|EdgiOS/i.test(ua) ? "chrome" : /FxiOS|OPiOS/i.test(ua) ? "autre" : "safari",
+      desktop: !ios && !android,
+    };
+  }
+  return clientDevice;
+}
+
+export function useDevice() {
+  const device = useSyncExternalStore(
+    () => () => {},
+    () => readDevice(),
+    () => SERVER_DEVICE,
+  );
   const canPrompt = useSyncExternalStore(
     (cb) => {
       listeners.add(cb);
@@ -47,92 +76,87 @@ function useInstallState() {
     () => deferred !== null,
     () => false,
   );
-  const env = useSyncExternalStore(
-    () => () => {},
-    () => readEnv(),
-    () => SERVER_ENV,
-  );
-  return { canPrompt, ...env };
+  return { ...device, canPrompt };
 }
 
-/** Bouton « Installer l'app » : installation native si possible, sinon mode d'emploi. Masqué si déjà installée. */
+/** Ouvre la fenêtre d'installation native (Chrome, Edge, Android). Renvoie false si indisponible. */
+export async function promptInstall(): Promise<boolean> {
+  if (!deferred) return false;
+  await deferred.prompt();
+  await deferred.userChoice;
+  deferred = null;
+  emit();
+  return true;
+}
+
+/* ------------------------------------------------------------------ */
+/* Bouton et bandeau                                                   */
+/* ------------------------------------------------------------------ */
+
+/** Bouton « Installer l'app » : installation native si possible, sinon page d'aide. Masqué si déjà installée. */
 export function InstallApp({ variant = "light" }: { variant?: "light" | "dark" }) {
-  const { canPrompt, standalone, ios, ready } = useInstallState();
-  const [help, setHelp] = useState(false);
-  if (!ready || standalone) return null;
-
-  async function install() {
-    if (deferred) {
-      await deferred.prompt();
-      await deferred.userChoice;
-      deferred = null;
-      listeners.forEach((l) => l());
-    } else {
-      setHelp(true);
-    }
-  }
-
-  const style =
-    variant === "dark"
-      ? "bg-white/10 text-white ring-1 ring-white/20 backdrop-blur"
-      : "bg-white text-sombre shadow-sm";
-
-  return (
+  const d = useDevice();
+  if (!d.ready || d.standalone) return null;
+  const style = variant === "dark" ? "bg-white/10 text-white ring-1 ring-white/20 backdrop-blur" : "bg-white text-sombre shadow-sm";
+  const content = (
     <>
-      <button onClick={install} className={`flex min-h-14 w-full items-center gap-3 rounded-2xl px-4 text-start transition active:scale-[0.98] ${style}`}>
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sombre">
-          <Logo size={30} />
-        </span>
-        <span className="flex-1">
-          <span className="block text-sm font-bold">Installer l'app Taraji</span>
-          <span className={`block text-xs ${variant === "dark" ? "text-white/60" : "text-sombre/50"}`}>
-            {canPrompt ? "Sur ton écran d'accueil, en un clic" : "Sur ton écran d'accueil, comme une vraie app"}
-          </span>
-        </span>
-        <span className="text-xl">📲</span>
-      </button>
-
-      <Sheet open={help} onClose={() => setHelp(false)} title="Installer l'app">
-        {ios ? (
-          <ol className="space-y-4">
-            <li className="flex items-center gap-3 rounded-2xl bg-white p-4">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sang font-bold text-white">1</span>
-              <span>
-                Dans <strong>Safari</strong>, touche le bouton <strong>Partager</strong>{" "}
-                <svg viewBox="0 0 24 24" className="inline h-5 w-5 text-[#007aff]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M12 3v12m0-12-4 4m4-4 4 4M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1" />
-                </svg>{" "}
-                en bas de l'écran.
-              </span>
-            </li>
-            <li className="flex items-center gap-3 rounded-2xl bg-white p-4">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sang font-bold text-white">2</span>
-              <span>
-                Choisis <strong>« Sur l'écran d'accueil »</strong>, puis <strong>Ajouter</strong>.
-              </span>
-            </li>
-          </ol>
-        ) : (
-          <ol className="space-y-4">
-            <li className="flex items-center gap-3 rounded-2xl bg-white p-4">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sang font-bold text-white">1</span>
-              <span>
-                Ouvre le menu du navigateur <strong>⋮</strong> (Chrome, Edge, Samsung Internet).
-              </span>
-            </li>
-            <li className="flex items-center gap-3 rounded-2xl bg-white p-4">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sang font-bold text-white">2</span>
-              <span>
-                Choisis <strong>« Installer l'application »</strong> ou <strong>« Ajouter à l'écran d'accueil »</strong>.
-              </span>
-            </li>
-          </ol>
-        )}
-        <p className="mt-4 text-center text-xs text-sombre/50">L'app s'ouvre ensuite en plein écran, sans barre de navigateur, et ta carte reste consultable hors ligne.</p>
-        <Button className="mt-4 w-full" onClick={() => setHelp(false)}>
-          Compris
-        </Button>
-      </Sheet>
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sombre">
+        <Logo size={30} />
+      </span>
+      <span className="flex-1">
+        <span className="block text-sm font-bold">Installer l'app Taraji</span>
+        <span className={`block text-xs ${variant === "dark" ? "text-white/60" : "text-sombre/50"}`}>Sur ton écran d'accueil, comme une vraie app</span>
+      </span>
+      <span className="text-xl">📲</span>
     </>
   );
+  const cls = `flex min-h-14 w-full items-center gap-3 rounded-2xl px-4 text-start transition active:scale-[0.98] ${style}`;
+  return d.canPrompt ? (
+    <button onClick={() => promptInstall()} className={cls}>
+      {content}
+    </button>
+  ) : (
+    <Link href="/installer" className={cls}>
+      {content}
+    </Link>
+  );
+}
+
+/** Bandeau en haut de l'écran de connexion. */
+export function InstallBanner() {
+  const d = useDevice();
+  if (!d.ready || d.standalone) return null;
+  const label = "📲 Installer l'app sur mon téléphone";
+  const cls = "flex min-h-12 w-full items-center justify-between gap-2 rounded-2xl bg-or px-4 text-sm font-bold text-sombre shadow-[0_8px_24px_-10px_rgba(242,183,5,0.9)]";
+  return d.canPrompt ? (
+    <button onClick={() => promptInstall()} className={cls}>
+      {label} <span>›</span>
+    </button>
+  ) : (
+    <Link href="/installer" className={cls}>
+      {label} <span className="rtl:rotate-180">›</span>
+    </Link>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Choix « continuer dans le navigateur » (mémorisé, hors données démo) */
+/* ------------------------------------------------------------------ */
+
+const BROWSER_KEY = "taraji-choix-navigateur";
+
+export function hasChosenBrowser(): boolean {
+  try {
+    return localStorage.getItem(BROWSER_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function chooseBrowser() {
+  try {
+    localStorage.setItem(BROWSER_KEY, "1");
+  } catch {
+    /* stockage indisponible : on redemandera la prochaine fois */
+  }
 }
